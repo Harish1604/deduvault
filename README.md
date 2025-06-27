@@ -110,7 +110,6 @@
    ```bash
     pip install -r requirements.txt
 
-
 3. **Configure your API keys**
     In uploader.py, replace your Pinata JWT:
    
