@@ -111,11 +111,11 @@
     pip install -r requirements.txt
 
 3. **Configure your API keys**
-    In uploader.py, replace your Pinata JWT:
+    In uploader.py, replace your Pinata APIs:
    
-      headers = {
-          "Authorization": "Bearer <your_pinata_jwt_here>"
-      }
+      PINATA_API_KEY = '<YOUR PINATA_API_KEY>'
+      PINATA_SECRET_API_KEY = '<YOUR PINATA_SECRET_API_KEY>'
+      
    
       In interact.py, set up your Infura / Ankr RPC endpoint and contract info:
    
