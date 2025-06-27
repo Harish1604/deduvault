@@ -1,148 +1,120 @@
-# 🗃️ Blockchain-Based File Deduplication using IPFS + Ethereum Smart Contracts
+# 🔒 DeduVault
 
-## 📌 Problem Statement
+**Decentralized Image Deduplication Platform using IPFS & Blockchain**
 
-With the explosive growth of cloud storage and e-commerce platforms, duplicate file uploads (especially images and product data) consume unnecessary bandwidth and storage. Traditional deduplication techniques rely on centralized systems, making them vulnerable to manipulation and data loss.
-
----
-
-## 🎯 Project Goal
-
-To create a **decentralized, transparent, and verifiable** system to detect and prevent duplicate file uploads using:
-- ✅ IPFS for decentralized file storage
-- ✅ SHA-256 hashing for content-based deduplication
-- ✅ Ethereum smart contracts for on-chain metadata logging and validation
-- ✅ Web3.py and Python backend integration
-- ✅ A sample UI mimicking e-commerce platforms showing deduplication in action
+> Secure your digital assets, detect duplicates instantly, and visualize content across platforms — all powered by Web3.
 
 ---
 
-## ✅ What We’ve Achieved So Far
+## 🚀 Overview
 
-### 1. 📦 IPFS File Upload
-- Used [Pinata](https://pinata.cloud) for IPFS hosting.
-- Uploaded a product image (`shirt.jpeg`) to IPFS.
-- Captured:
-  - ✅ CID (Content Identifier)
-  - ✅ Gateway URL
-  - ✅ SHA-256 hash of the file and description
+**DeduVault** is a next-generation image deduplication and asset verification system. Built with **IPFS**, **Blockchain**, and **Streamlit**, it allows users to:
 
-### 2. 🧠 SHA-256 Deduplication Logic
-- Custom Python hasher script created.
-- Generated `hash = SHA256(file_content + description)`.
-- Used this hash as a unique key to detect duplicates.
-
-### 3. 🧾 Smart Contract Design: `DedupStorage.sol`
-- Built and tested a Solidity smart contract with:
-  - `storeFile(string sha256Hash, string ipfsCID)`
-  - `fileExists(string sha256Hash) → bool`
-  - `getFile(string sha256Hash) → (CID, uploader, timestamp)`
-- Emitted `FileStored` event for every unique file entry.
-
-### 4. 🧪 Smart Contract Deployment
-- Compiled and deployed to **Ethereum Sepolia Testnet** using [Remix IDE](https://remix.ethereum.org).
-- Contract address: `0x3c5535F2d83049e816586b89D4585cAD31bB6f87`
-- ABI was generated and stored as `DedupStorage_abi.json`.
-
-### 5. 🔌 Web3.py Integration
-- Python script (`interact.py`) created to:
-  - Connect to Sepolia via Infura
-  - Load ABI and contract
-  - Prepare and sign transactions (using private key)
-  - Call `storeFile()` with hash and CID
-
-### 6. 🖥️ Streamlit-based UI
-- Simulated 3-column view for e-commerce platforms.
-- Retrieved IPFS image using CID and SHA hash.
-- Displayed uploaded product image and metadata.
+- Upload image files.
+- Generate a **SHA-256 hash**.
+- Store them on **IPFS via Pinata**.
+- Check for duplicates using **on-chain verification**.
+- **Register new files** on the blockchain using smart contracts.
+- Visualize product listings on **Flipkart, Amazon, and Myntra**-like previews.
 
 ---
 
-## ⚠️ Where We're Stuck (And Why)
+## 🌐 Live Tech Stack
 
-| ❌ Issue | 😤 Cause |
-|---------|----------|
-| `insufficient funds for gas` | Wallet has 0 Sepolia ETH, so transactions (like `storeFile()`) fail |
-| Chainlink Faucet refusing | Requires 1 real LINK token on Ethereum Mainnet |
-| Alchemy / QuickNode faucet blocked | Needs Twitter or mainnet ETH |
-| Can't complete dedup check from frontend | Because hash can't be stored without sending a transaction |
-
----
-
-## 🧠 Why We're Doing This
-
-- ✅ Make storage and uploads **decentralized**.
-- ✅ Prevent storage of duplicate files **without needing a central server**.
-- ✅ Enable users to **verify ownership and upload time**.
-- ✅ Simulate a **real-world e-commerce scenario** with cross-platform validation.
+| Layer            | Tech Used                                    |
+|------------------|----------------------------------------------|
+| 💻 Frontend      | Streamlit + HTML/CSS                         |
+| 🧠 Hashing       | SHA-256 (Python `hashlib`)                   |
+| 📦 File Storage  | IPFS via Pinata                              |
+| 🔗 Blockchain    | Ethereum (Testnet) + Web3.py                 |
+| 📃 Smart Contract| Solidity (Deployed via Remix IDE)           |
+| 🧠 Backend Logic | Python (`interact.py`, `uploader.py`)        |
+| 🔍 Data Format   | JSON (for file metadata, local DB)           |
 
 ---
 
-## 🛠️ Local Deduplication Tracking
+## 📸 Features
 
-- We use a simple local file: `dedup_db.json`
-- Every time a new file is uploaded:
-  - SHA-256 hash is checked
-  - If unique → it's recorded
-  - If duplicate → fetch existing CID and metadata
-
----
-
-## 🔄 What’s Next
-
-### 🚀 Immediate Next Steps
-1. **Get Sepolia ETH** using a friend’s wallet or working faucet
-2. Call `storeFile()` from Python
-3. Validate on-chain file storage
-4. Connect frontend to `fileExists()` and `getFile()`
-5. Build success/fail messages into UI
-
-### 🧱 Future Scope
-- Implement role-based access
-- Upload non-image files (PDFs, docs, etc.)
-- Deploy frontend using Flask or React + Tailwind
-- Move from testnet to real Layer-2 network like Polygon PoS
+- 🔐 **Cryptographic Security** – Unique SHA-256 hashing per image
+- 🌐 **IPFS Integration** – Decentralized, content-addressed storage
+- ⛓️ **Blockchain Verification** – Smart contract-based deduplication check
+- ⚡ **Real-time Detection** – Alerts on existing duplicates
+- 🛍️ **Cross-platform Visualization** – See how your product looks on Flipkart, Amazon & Myntra
+- 📊 **Live Metrics Dashboard** – Uptime, response time, encryption stats
 
 ---
 
-## 📂 Folder Structure
+## 📂 File Structure
 
-dedup-ipfs-ui/
-│
-├── assets/
-│ └── shirt.jpeg
-│
-├── contracts/
-│ └── DedupStorage.sol
-│
-├── deploy/
-│ ├── deploy_contract.py
-│ └── wallet.env
-│
-├── utils/
-│ └── hasher.py
-│
-├── backend/
-│ └── interact.py
-│
-├── dedup_db.json
-├── DedupStorage_abi.json
-└── README.md ← you’re reading it
+📁 deduvault/
+├── streamlit_app.py        # 🎯 Main Streamlit frontend
+├── interact.py             # 🔗 Blockchain interaction logic
+├── uploader.py             # ☁️ Pinata IPFS upload + hash
+├── requirements.txt        # 📦 Python dependencies
+├── dedup_db.json           # 🧠 Local hash-to-CID mapping
+├── README.md               # 📘 Documentation
+└── utils/
+    └── hasher.py           # 🔐 SHA-256 hash generation
 
 
 
 ---
 
-## 🙌 Acknowledgements
+## 🧪 Smart Contract Overview
 
-- [Pinata](https://pinata.cloud) for IPFS support  
-- [Remix IDE](https://remix.ethereum.org) for contract compilation and deployment  
-- [Infura](https://infura.io) for testnet RPC access  
-- [Web3.py](https://web3py.readthedocs.io) for Ethereum integration  
-- [Chainlink Docs](https://docs.chain.link) for event examples
+- **Name**: `DedupStorage.sol`
+- **Functions**:
+  - `storeFile(string memory fileHash, string memory cid)`
+  - `fileExists(string memory fileHash) public view returns (bool)`
+  - `getFile(string memory fileHash) public view returns (FileData)`
+- **Chain**: Ethereum (e.g., Sepolia / Polygon Mumbai / Amoy)
+- **Deployed Using**: Remix IDE
 
 ---
 
-## 💡 Created by:
-**Captain Harish** — for decentralized data warriors everywhere.  
-Stay deduplicated, stay unstoppable. 🌐🔥
+## 🧠 How It Works
+
+### 🔁 Workflow
+
+1. **Upload** your image via the Streamlit UI
+2. A **SHA-256 hash** is generated locally
+3. File is uploaded to **IPFS using Pinata API**
+4. The app checks if the file hash **already exists** on the blockchain
+5. If not found, the hash and CID are **stored on-chain** using a smart contract
+6. You get a **confirmation + IPFS link** and deduplication feedback
+
+---
+
+## 🛠️ Installation Guide
+
+### 🐍 Requirements
+
+- Python 3.8+
+- `pip` for dependency management
+
+### 🔧 Setup
+
+1. **Clone the repo**
+   ```bash
+   git clone https://github.com/yourusername/deduvault.git
+   cd deduvault
+
+2. **Install dependencies**
+  ```bash
+  pip install -r requirements.txt
+
+
+3. **Configure your API keys**
+
+  In uploader.py, replace your Pinata JWT:
+
+  headers = {
+      "Authorization": "Bearer <your_pinata_jwt_here>"
+    =}
+
+    In interact.py, set up your Infura / Ankr RPC endpoint + contract info:
+    Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/YOUR_INFURA_KEY"))
+
+4. Run the Streamlit app
+  ```bash
+  streamlit run streamlit_app.py
