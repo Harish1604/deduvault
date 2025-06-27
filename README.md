@@ -114,6 +114,7 @@
     In uploader.py, replace your Pinata APIs:
    
       PINATA_API_KEY = '<YOUR PINATA_API_KEY>'
+   
       PINATA_SECRET_API_KEY = '<YOUR PINATA_SECRET_API_KEY>'
       
    
