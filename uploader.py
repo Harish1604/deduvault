@@ -5,7 +5,7 @@ from utils.hasher import generate_sha256
 
 PINATA_API_KEY = '<YOUR PINATA_API_KEY>'
 PINATA_SECRET_API_KEY = '<YOUR PINATA_SECRET_API_KEY>'
-DEDUP_DB_PATH = '<YOUR dedup_db.json PATH>'
+DEDUP_DB_PATH = r'./dedup_db.json'
 
 def load_db():
     if not os.path.exists(DEDUP_DB_PATH):
