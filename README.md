@@ -45,19 +45,26 @@
 ---
 
 ## 📂 File Structure
+<pre>```bash
+📁 Decentralized-Deduplication/
+├── contracts/
+│   ├── DedupStorage.sol         # Solidity Smart Contract
+│   └── DedupStorage_abi.json    # Compiled ABI for contract interaction
+│
+├── utils/
+│   ├── hasher.py                # SHA-256 hash generation
+│   └── dedup_db.json            # Local deduplication DB (hash → CID)
+│
+├── hash.py                      # Alternative hashing logic (if needed)
+├── interact.py                  # Web3 interaction with smart contract
+├── main.py                      # Optional main entry (legacy/dev)
+├── streamlit_app.py             # Streamlit frontend app
+├── uploader.py                  # Upload file to Pinata & manage dedup
+├── wallet.env                   # Environment vars (wallet keys, etc.)
+├── requirements.txt             # Python dependencies
+└── README.md                    # Documentation
 
-📁 deduvault/
-├── streamlit_app.py        # 🎯 Main Streamlit frontend
-├── interact.py             # 🔗 Blockchain interaction logic
-├── uploader.py             # ☁️ Pinata IPFS upload + hash
-├── requirements.txt        # 📦 Python dependencies
-├── dedup_db.json           # 🧠 Local hash-to-CID mapping
-├── README.md               # 📘 Documentation
-└── utils/
-    └── hasher.py           # 🔐 SHA-256 hash generation
-
-
-
+</pre>
 ---
 
 ## 🧪 Smart Contract Overview
@@ -98,23 +105,24 @@
    ```bash
    git clone https://github.com/yourusername/deduvault.git
    cd deduvault
-
+   
 2. **Install dependencies**
-  ```bash
-  pip install -r requirements.txt
+   ```bash
+    pip install -r requirements.txt
 
 
 3. **Configure your API keys**
+    In uploader.py, replace your Pinata JWT:
+   
+      headers = {
+          "Authorization": "Bearer <your_pinata_jwt_here>"
+      }
+   
+      In interact.py, set up your Infura / Ankr RPC endpoint and contract info:
+   
+      w3 = Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/YOUR_INFURA_KEY"))
 
-  In uploader.py, replace your Pinata JWT:
-
-  headers = {
-      "Authorization": "Bearer <your_pinata_jwt_here>"
-    =}
-
-    In interact.py, set up your Infura / Ankr RPC endpoint + contract info:
-    Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/YOUR_INFURA_KEY"))
-
-4. Run the Streamlit app
-  ```bash
-  streamlit run streamlit_app.py
+   
+5. **Run the Streamlit app**
+   ```bash
+    streamlit run streamlit_app.py
