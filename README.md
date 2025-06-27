@@ -45,7 +45,7 @@
 ---
 
 ## 📂 File Structure
-<pre>```bash
+<pre>
 📁 Decentralized-Deduplication/
 ├── contracts/
 │   ├── DedupStorage.sol         # Solidity Smart Contract
