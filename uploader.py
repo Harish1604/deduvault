@@ -3,8 +3,8 @@ import json
 import os
 from utils.hasher import generate_sha256
 
-PINATA_API_KEY = '<YOUR PINATA_API_KEY>'
-PINATA_SECRET_API_KEY = '<YOUR PINATA_SECRET_API_KEY>'
+PINATA_API_KEY = '27d4d8e05c46c9665df2'
+PINATA_SECRET_API_KEY = '437a81c9fa70e01672ab63cd80e823620968e7908777a632ea658886c544d3e1'
 DEDUP_DB_PATH = r'./dedup_db.json'
 
 def load_db():
