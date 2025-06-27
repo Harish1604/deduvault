@@ -377,15 +377,15 @@ if uploaded_file:
                     st.markdown("#### 📊 Existing Record Details")
                     specs_html = '<div class="product-specs">'
                     specs_html += f"""
-                        <div class="spec-item">
+                        <div class="spec-item" style="color:black">
                             <span><strong>Original CID:</strong></span>
                             <span><code>{data.get('cid', 'N/A')}</code></span>
                         </div>
-                        <div class="spec-item">
+                        <div class="spec-item" style="color:black">
                             <span><strong>Uploader:</strong></span>
                             <span><code>{data.get('uploader', 'N/A')}</code></span>
                         </div>
-                        <div class="spec-item">
+                        <div class="spec-item" style="color:black">
                             <span><strong>Timestamp:</strong></span>
                             <span>{data.get('timestamp', 'N/A')}</span>
                         </div>
@@ -459,7 +459,7 @@ if st.button("🚀 Generate Platform Previews", type="primary"):
             {
                 "name": "Myntra",
                 "color": "#ff3e6c",
-                "logo": "M",
+                "logo" : "M",
                 "brand": "Roadster",
                 "category": "Casual Wear",
                 "price": "₹999",

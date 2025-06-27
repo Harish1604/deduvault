@@ -3,11 +3,11 @@ import json
 import os
 
 # Web3 Setup
-w3 = Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/YOUR_INFURA_KEY"))
+w3 = Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/03729448df4641ab9d35be871215138c"))
 
 # Wallet Info
-wallet_address = '<#WALLET ADDRESS>'
-private_key = '<WALLET PRIVATE KEY>'
+wallet_address = '0x66c720EaDEEc55048fFCb86A0300123D5fe0b1a7'
+private_key = '0x5828012726adadce4b084885f549f2d1844e3e0fa0f1ab6296cf1f8b9bb507f9'
 
 # Dynamically build the path to the ABI file
 abi_path = os.path.join(os.getcwd(), "contracts", "DedupStorage_abi.json")
@@ -15,7 +15,7 @@ abi_path = os.path.join(os.getcwd(), "contracts", "DedupStorage_abi.json")
 with open(abi_path) as f:
     abi = json.load(f)
 
-contract_address = "<YOUR Contract address>"
+contract_address = "0x3c5535F2d83049e816586b89D4585cAD31bB6f87"
 contract = w3.eth.contract(address=contract_address, abi=abi)
 
 
