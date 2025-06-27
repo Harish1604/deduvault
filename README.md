@@ -46,7 +46,7 @@
 
 ## 📂 File Structure
 <pre>
-📁 Decentralized-Deduplication/
+📁 deduvault/
 ├── contracts/
 │   ├── DedupStorage.sol         # Solidity Smart Contract
 │   └── DedupStorage_abi.json    # Compiled ABI for contract interaction
@@ -54,10 +54,8 @@
 ├── utils/
 │   ├── hasher.py                # SHA-256 hash generation
 │   └── dedup_db.json            # Local deduplication DB (hash → CID)
-│
-├── hash.py                      # Alternative hashing logic (if needed)
-├── interact.py                  # Web3 interaction with smart contract
-├── main.py                      # Optional main entry (legacy/dev)
+|
+├── interact.py                  # Web3 interaction with smart contract                    
 ├── streamlit_app.py             # Streamlit frontend app
 ├── uploader.py                  # Upload file to Pinata & manage dedup
 ├── wallet.env                   # Environment vars (wallet keys, etc.)
