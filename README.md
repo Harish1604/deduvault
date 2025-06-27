@@ -106,24 +106,27 @@
    git clone https://github.com/yourusername/deduvault.git
    cd deduvault
    
+   
 2. **Install dependencies**
    ```bash
     pip install -r requirements.txt
 
+
 3. **Configure your API keys**
     In uploader.py, replace your Pinata APIs:
    
-      PINATA_API_KEY = '<YOUR PINATA_API_KEY>'
+      PINATA_API_KEY = '<YOUR_PINATA_API_KEY>'
    
-      PINATA_SECRET_API_KEY = '<YOUR PINATA_SECRET_API_KEY>'
+      PINATA_SECRET_API_KEY = '<YOUR_PINATA_SECRET_API_KEY>'
       
 
 
-      -> In interact.py, set up your Infura / Ankr RPC endpoint and contract info:
+      > In interact.py, set up your Infura / Ankr RPC endpoint and contract info:
    
         w3 = Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/YOUR_INFURA_KEY"))
 
+
    
-5. **Run the Streamlit app**
+4. **Run the Streamlit app**
    ```bash
     streamlit run streamlit_app.py
