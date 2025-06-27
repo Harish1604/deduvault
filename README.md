@@ -117,10 +117,11 @@
    
       PINATA_SECRET_API_KEY = '<YOUR PINATA_SECRET_API_KEY>'
       
+
+
+      -> In interact.py, set up your Infura / Ankr RPC endpoint and contract info:
    
-      In interact.py, set up your Infura / Ankr RPC endpoint and contract info:
-   
-      w3 = Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/YOUR_INFURA_KEY"))
+        w3 = Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/YOUR_INFURA_KEY"))
 
    
 5. **Run the Streamlit app**
