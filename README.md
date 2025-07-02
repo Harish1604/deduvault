@@ -45,8 +45,8 @@
 ---
 
 ## 📂 File Structure
-<pre>```bash
-📁 Decentralized-Deduplication/
+<pre>
+📁 deduvault/
 ├── contracts/
 │   ├── DedupStorage.sol         # Solidity Smart Contract
 │   └── DedupStorage_abi.json    # Compiled ABI for contract interaction
@@ -54,10 +54,8 @@
 ├── utils/
 │   ├── hasher.py                # SHA-256 hash generation
 │   └── dedup_db.json            # Local deduplication DB (hash → CID)
-│
-├── hash.py                      # Alternative hashing logic (if needed)
-├── interact.py                  # Web3 interaction with smart contract
-├── main.py                      # Optional main entry (legacy/dev)
+|
+├── interact.py                  # Web3 interaction with smart contract                    
 ├── streamlit_app.py             # Streamlit frontend app
 ├── uploader.py                  # Upload file to Pinata & manage dedup
 ├── wallet.env                   # Environment vars (wallet keys, etc.)
@@ -106,22 +104,27 @@
    git clone https://github.com/yourusername/deduvault.git
    cd deduvault
    
+   
 2. **Install dependencies**
    ```bash
     pip install -r requirements.txt
 
+
 3. **Configure your API keys**
-    In uploader.py, replace your Pinata JWT:
+    In uploader.py, replace your Pinata APIs:
    
-      headers = {
-          "Authorization": "Bearer <your_pinata_jwt_here>"
-      }
+      PINATA_API_KEY = '<YOUR_PINATA_API_KEY>'
    
-      In interact.py, set up your Infura / Ankr RPC endpoint and contract info:
+      PINATA_SECRET_API_KEY = '<YOUR_PINATA_SECRET_API_KEY>'
+      
+
+
+   In interact.py, set up your Infura / Ankr RPC endpoint and contract info:
    
-      w3 = Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/YOUR_INFURA_KEY"))
+        w3 = Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/YOUR_INFURA_KEY"))
+
 
    
-5. **Run the Streamlit app**
+4. **Run the Streamlit app**
    ```bash
     streamlit run streamlit_app.py

@@ -280,20 +280,17 @@ with col2:
 # Upload Section
 st.markdown("---")
 st.markdown("### 📤 Upload & Process Image")
-
 uploaded_file = st.file_uploader(
-    "Select your image file (JPG, JPEG, PNG)", 
+    "Select your image file (JPG, JPEG, PNG)",
     type=["jpg", "jpeg", "png"],
     help="Maximum file size: 10MB. Supported formats: JPG, JPEG, PNG"
 )
 
 if uploaded_file:
     col1, col2 = st.columns([1, 1])
-    
     with col1:
         st.markdown("#### 🖼️ Preview")
         st.image(uploaded_file, use_container_width=True, caption=f"Uploaded: {uploaded_file.name}")
-        
         # File information
         st.markdown("#### 📋 File Information")
         file_size = len(uploaded_file.getvalue())
@@ -313,34 +310,28 @@ if uploaded_file:
             </div>
         </div>
         """, unsafe_allow_html=True)
-    
+
     with col2:
         st.markdown("#### 🔐 Cryptographic Processing")
-        
         file_bytes = uploaded_file.read()
         file_hash = hashlib.sha256(file_bytes).hexdigest()
-        
         st.markdown("**SHA-256 Hash:**")
         st.markdown(f"""
         <div class="hash-display">
             <code>{file_hash}</code>
         </div>
         """, unsafe_allow_html=True)
-        
+
         # Processing steps
         with st.spinner("🔄 Processing file..."):
             progress_bar = st.progress(0)
-            
             # Simulate processing steps
             import time
-            
             progress_bar.progress(25)
             st.write("✅ Hash generated successfully")
             time.sleep(0.5)
-            
             progress_bar.progress(50)
             st.write("🔄 Uploading to IPFS...")
-            
             try:
                 cid = upload_to_pinata(file_bytes, uploaded_file.name)
                 progress_bar.progress(75)
@@ -348,22 +339,10 @@ if uploaded_file:
             except Exception as e:
                 st.error(f"❌ IPFS upload failed: {e}")
                 st.stop()
-            
             progress_bar.progress(100)
             st.write("🔍 Checking for duplicates...")
-            
-        if cid:
-            st.markdown(f"""
-            <div class="status-success">
-                <h4>✅ Upload Successful!</h4>
-                <p><strong>IPFS CID:</strong> <code>{cid}</code></p>
-                <p><strong>Gateway URL:</strong> <a href="https://gateway.pinata.cloud/ipfs/{cid}" target="_blank">View on IPFS</a></p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-            # Check for duplicates
+            # Check for duplicates immediately after upload
             exists = check_file_exists(file_hash)
-            
             if exists:
                 st.markdown(f"""
                 <div class="status-warning">
@@ -371,7 +350,6 @@ if uploaded_file:
                     <p>This file already exists in our blockchain registry.</p>
                 </div>
                 """, unsafe_allow_html=True)
-                
                 data = get_file_data(file_hash)
                 if data:
                     st.markdown("#### 📊 Existing Record Details")
@@ -381,11 +359,11 @@ if uploaded_file:
                             <span><strong>Original CID:</strong></span>
                             <span><code>{data.get('cid', 'N/A')}</code></span>
                         </div>
-                        <div class="spec-item" style="color:black">
+                        <div class="spec-item">
                             <span><strong>Uploader:</strong></span>
                             <span><code>{data.get('uploader', 'N/A')}</code></span>
                         </div>
-                        <div class="spec-item" style="color:black">
+                        <div class="spec-item">
                             <span><strong>Timestamp:</strong></span>
                             <span>{data.get('timestamp', 'N/A')}</span>
                         </div>
@@ -393,9 +371,17 @@ if uploaded_file:
                     specs_html += '</div>'
                     st.markdown(specs_html, unsafe_allow_html=True)
             else:
+                st.markdown(f"""
+                <div class="status-success">
+                    <h4>✅ New Image Uploaded Successfully!</h4>
+                    <p>No duplicates found.</p>
+                    <p><strong>IPFS CID:</strong> <code>{cid}</code></p>
+                    <p><strong>Gateway URL:</strong> <a href="https://gateway.pinata.cloud/ipfs/{cid}" target="_blank">View on IPFS</a></p>
+                </div>
+                """, unsafe_allow_html=True)
+                # Record on chain
                 with st.spinner("🔗 Recording on blockchain..."):
                     tx_hash = store_file_on_chain(file_hash, cid)
-                    
                 if tx_hash:
                     st.markdown(f"""
                     <div class="status-success">
@@ -407,14 +393,14 @@ if uploaded_file:
                 else:
                     st.error("❌ Blockchain transaction failed. Please try again.")
 
+# E-Commerce Platform Preview
 st.markdown("---")
 st.markdown("### 🛒 E-Commerce Platform Preview")
 st.markdown("*See how your image would appear across different e-commerce platforms*")
 
 if st.button("🚀 Generate Platform Previews", type="primary"):
-    if uploaded_file and 'cid' in locals():
+    if uploaded_file:
         st.markdown("#### 📱 Cross-Platform Product Listings")
-
         platforms = [
             {
                 "name": "Flipkart",
@@ -459,7 +445,7 @@ if st.button("🚀 Generate Platform Previews", type="primary"):
             {
                 "name": "Myntra",
                 "color": "#ff3e6c",
-                "logo" : "M",
+                "logo": "M",
                 "brand": "Roadster",
                 "category": "Casual Wear",
                 "price": "₹999",
@@ -480,7 +466,6 @@ if st.button("🚀 Generate Platform Previews", type="primary"):
 
         # Create columns for platform cards
         cols = st.columns(len(platforms))
-
         for i, (col, platform) in enumerate(zip(cols, platforms)):
             with col:
                 st.markdown(f"""
@@ -496,13 +481,10 @@ if st.button("🚀 Generate Platform Previews", type="primary"):
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-
                 # Product image
-                st.image(f"https://gateway.pinata.cloud/ipfs/{cid}", use_container_width=True)
-
+                st.image(uploaded_file, use_container_width=True)
                 # Product details
                 st.markdown(f"**{platform['brand']}** - Premium Collection")
-
                 # Price section
                 col_price, col_rating = st.columns([1, 1])
                 with col_price:
@@ -512,7 +494,6 @@ if st.button("🚀 Generate Platform Previews", type="primary"):
                         {platform['original_price']} <span style="color: #27ae60; font-weight: bold;">({platform['discount']})</span>
                     </div>
                     """, unsafe_allow_html=True)
-
                 with col_rating:
                     st.markdown(f"""
                     <div style="margin-top: 0.5rem;">
@@ -520,20 +501,16 @@ if st.button("🚀 Generate Platform Previews", type="primary"):
                         <div style="font-size: 0.8rem; color: #888;">({platform['reviews']} reviews)</div>
                     </div>
                     """, unsafe_allow_html=True)
-
                 # Specifications
                 st.markdown("**Product Specifications:**")
                 for spec, value in platform['specs'].items():
                     st.markdown(f"**{spec}:** {value}")
-
                 # Features
                 st.markdown("**Key Features:**")
                 for feature in platform['features']:
                     st.markdown(f"✅ {feature}")
-
                 # Delivery info
                 st.info(f"🚚 {platform['delivery']}")
-
                 # Action buttons
                 if platform['name'] == "Flipkart":
                     if st.button("🛒 Add to Cart", key=f"cart_{i}", type="primary"):
@@ -544,34 +521,5 @@ if st.button("🚀 Generate Platform Previews", type="primary"):
                 else:
                     if st.button("💳 Purchase", key=f"purchase_{i}", type="primary"):
                         st.success(f"Processing {platform['name']} order...")
-
-        # Analytics section
-        st.markdown("---")
-        st.markdown("### 📊 Cross-Platform Analytics")
-
-        col1, col2, col3, col4 = st.columns(4)
-
-        with col1:
-            st.metric("Best Price", "₹999", "-₹500", delta_color="inverse")
-        with col2:
-            st.metric("Highest Rating", "4.3⭐", "+0.2")
-        with col3:
-            st.metric("Most Reviews", "2,156", "+67%")
-        with col4:
-            st.metric("Avg. Discount", "47%", "+12%")
-
     else:
         st.warning("⚠️ Please upload an image first to generate platform previews.")
-
-# Footer
-st.markdown("---")
-st.markdown("""
-<div style="text-align: center; padding: 2rem; background: #f8f9fa; border-radius: 10px; margin-top: 2rem;">
-    <h3 style="color: #2c3e50;">🔒 DeduVault</h3>
-    <p style="color: #7f8c8d;">Securing Digital Assets Through Decentralized Innovation</p>
-    <p style="font-size: 0.9rem; color: #95a5a6;">
-        Powered by IPFS, Blockchain Technology, and Advanced Cryptography<br>
-        © 2025 DeduVault. All rights reserved.
-    </p>
-</div>
-""", unsafe_allow_html=True)
