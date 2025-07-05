@@ -7,7 +7,7 @@ venv/
 .env/
 
 # Streamlit secrets (super important)
-.streamlit/secrets.toml
+streamlit/secrets.toml
 
 # Configs and keys
 config.py
