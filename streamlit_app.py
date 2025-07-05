@@ -370,11 +370,11 @@ if uploaded_file is not None and uploaded_file.size > 0:
                             <span><strong>Original CID:</strong></span>
                             <span><code>{data.get('cid', 'N/A')}</code></span>
                         </div>
-                        <div class="spec-item">
+                        <div class="spec-item" style="color:black">
                             <span><strong>Uploader:</strong></span>
                             <span><code>{data.get('uploader', 'N/A')}</code></span>
                         </div>
-                        <div class="spec-item">
+                        <div class="spec-item" style="color:black">
                             <span><strong>Timestamp:</strong></span>
                             <span>{data.get('timestamp', 'N/A')}</span>
                         </div>
