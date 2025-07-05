@@ -1,4 +1,5 @@
 # streamlit_app.py
+from datetime import time
 import streamlit as st
 import hashlib
 from uploader import upload_to_pinata
@@ -288,15 +289,23 @@ uploaded_file = st.file_uploader(
     help="Maximum file size: 10MB. Supported formats: JPG, JPEG, PNG"
 )
 
-if uploaded_file:
+
+if uploaded_file is not None and uploaded_file.size > 0:
+    file_bytes = uploaded_file.read()
+
+    # Display Preview + Info in two columns
     col1, col2 = st.columns([1, 1])
     with col1:
         st.markdown("#### 🖼️ Preview")
-        image = Image.open(uploaded_file)
-        st.image(image, use_container_width=True, caption=f"Uploaded: {uploaded_file.name}")
+        if uploaded_file.type.startswith("image/"):
+            image = Image.open(io.BytesIO(file_bytes))
+            st.image(image, use_column_width=True, caption=f"Uploaded: {uploaded_file.name}")
+        else:
+            st.warning("⚠️ Uploaded file is not a supported image type.")
+
         # File information
         st.markdown("#### 📋 File Information")
-        file_size = len(uploaded_file.getvalue())
+        file_size = len(file_bytes)
         st.markdown(f"""
         <div class="product-specs" style="color:black">
             <div class="spec-item">
@@ -316,7 +325,6 @@ if uploaded_file:
 
     with col2:
         st.markdown("#### 🔐 Cryptographic Processing")
-        file_bytes = uploaded_file.read()
         file_hash = hashlib.sha256(file_bytes).hexdigest()
         st.markdown("**SHA-256 Hash:**")
         st.markdown(f"""
@@ -325,16 +333,14 @@ if uploaded_file:
         </div>
         """, unsafe_allow_html=True)
 
-        # Processing steps
         with st.spinner("🔄 Processing file..."):
             progress_bar = st.progress(0)
-            # Simulate processing steps
-            import time
             progress_bar.progress(25)
             st.write("✅ Hash generated successfully")
             time.sleep(0.5)
             progress_bar.progress(50)
             st.write("🔄 Uploading to IPFS...")
+
             try:
                 cid = upload_to_pinata(file_bytes, uploaded_file.name)
                 progress_bar.progress(75)
@@ -342,9 +348,10 @@ if uploaded_file:
             except Exception as e:
                 st.error(f"❌ IPFS upload failed: {e}")
                 st.stop()
+
             progress_bar.progress(100)
             st.write("🔍 Checking for duplicates...")
-            # Check for duplicates immediately after upload
+
             exists = check_file_exists(file_hash)
             if exists:
                 st.markdown(f"""
@@ -353,6 +360,7 @@ if uploaded_file:
                     <p>This file already exists in our blockchain registry.</p>
                 </div>
                 """, unsafe_allow_html=True)
+
                 data = get_file_data(file_hash)
                 if data:
                     st.markdown("#### 📊 Existing Record Details")
@@ -382,9 +390,10 @@ if uploaded_file:
                     <p><strong>Gateway URL:</strong> <a href="https://gateway.pinata.cloud/ipfs/{cid}" target="_blank">View on IPFS</a></p>
                 </div>
                 """, unsafe_allow_html=True)
-                # Record on chain
+
                 with st.spinner("🔗 Recording on blockchain..."):
                     tx_hash = store_file_on_chain(file_hash, cid)
+
                 if tx_hash:
                     st.markdown(f"""
                     <div class="status-success">
