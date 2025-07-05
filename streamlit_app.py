@@ -494,7 +494,7 @@ if st.button("🚀 Generate Platform Previews", type="primary"):
                 </div>
                 """, unsafe_allow_html=True)
                 # Product image
-                st.image(uploaded_file, use_container_width=True)
+                st.image(uploaded_file, use_column_width=True)
                 # Product details
                 st.markdown(f"**{platform['brand']}** - Premium Collection")
                 # Price section
