@@ -3,6 +3,8 @@ import streamlit as st
 import hashlib
 from uploader import upload_to_pinata
 from interact import store_file_on_chain, check_file_exists, get_file_data
+from PIL import Image
+import io
 
 # Page configuration
 st.set_page_config(
@@ -290,7 +292,8 @@ if uploaded_file:
     col1, col2 = st.columns([1, 1])
     with col1:
         st.markdown("#### 🖼️ Preview")
-        st.image(uploaded_file, use_container_width=True, caption=f"Uploaded: {uploaded_file.name}")
+        image = Image.open(uploaded_file)
+        st.image(image, use_container_width=True, caption=f"Uploaded: {uploaded_file.name}")
         # File information
         st.markdown("#### 📋 File Information")
         file_size = len(uploaded_file.getvalue())
