@@ -1,23 +1,19 @@
 from web3 import Web3
 import json
 import os
+import streamlit as st
 
-# Web3 Setup
-w3 = Web3(Web3.HTTPProvider("https://sepolia.infura.io/v3/03729448df4641ab9d35be871215138c"))
+w3 = Web3(Web3.HTTPProvider(st.secrets["INFURA_RPC_URL"]))
+wallet_address = st.secrets["WALLET_ADDRESS"]
+private_key = st.secrets["PRIVATE_KEY"]
+contract_address = st.secrets["CONTRACT_ADDRESS"]
 
-wallet_address = '0x66c720EaDEEc55048fFCb86A0300123D5fe0b1a7'
-private_key = '0x5828012726adadce4b084885f549f2d1844e3e0fa0f1ab6296cf1f8b9bb507f9'
-
-# Dynamically build the path to the ABI file
+# Dynamically load ABI
 abi_path = os.path.join(os.getcwd(), "contracts", "DedupStorage_abi.json")
-
 with open(abi_path) as f:
     abi = json.load(f)
 
-contract_address = "0x3c5535F2d83049e816586b89D4585cAD31bB6f87"
-
 contract = w3.eth.contract(address=contract_address, abi=abi)
-
 
 def check_file_exists(file_hash):
     try:
@@ -26,19 +22,17 @@ def check_file_exists(file_hash):
         print("Error checking file:", e)
         return False
 
-
 def get_file_data(file_hash):
     try:
         data = contract.functions.getFile(file_hash).call()
         return {
             "cid": data[0],
             "uploader": data[1],
-            "timestamp": str(data[2])  # no datetime, raw timestamp
+            "timestamp": str(data[2])
         }
     except Exception as e:
         print("Error fetching file data:", e)
         return None
-
 
 def store_file_on_chain(file_hash, ipfs_cid):
     try:
