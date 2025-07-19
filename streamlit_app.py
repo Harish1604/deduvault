@@ -1,418 +1,514 @@
-# streamlit_app.py
 import time
 import streamlit as st
-import hashlib
-from uploader import upload_to_pinata
+from uploader import upload_to_pinata, check_duplicate, init_db
 from interact import store_file_on_chain, check_file_exists, get_file_data
 from PIL import Image
 import io
+from utils.hasher import generate_hashes
+from dotenv import load_dotenv
+import os
+import git
+import logging
+
+# Load .env file
+load_dotenv()
+
+# Initialize SQLite database
+init_db()
+
+# GitHub repository sync
+DB_PATH = "data/dedup_db.sqlite"
+REPO_DIR = "."
+
+# Initialize Git repository
+os.makedirs("data", exist_ok=True)
+try:
+    repo = git.Repo(REPO_DIR)
+    # Pull latest database
+    origin = repo.remotes.origin
+    origin.pull()
+    logging.info("Pulled latest database from GitHub")
+except git.exc.NoSuchPathError:
+    logging.error("Git repository not initialized. Initialize it in deployment.")
+except git.exc.GitCommandError as e:
+    logging.error(f"Git pull failed: {e}")
+
+# Trusted uploaders
+trusted_uploaders = ["0x66c720EaDEEc55048fFCb86A0300123D5fe0b1a7", "0x92643AEafaf65d9cA08347A9e8e09c7A927b1362"]
 
 # Page configuration
 st.set_page_config(
-    page_title="DeduVault - Decentralized Image Deduplication",
+    page_title="DeduVault - Decentralized Image Vault",
     page_icon="🔒",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for professional styling
+# Custom CSS with Tailwind and unique styling
 st.markdown("""
+<link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
-    .main-header {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        padding: 2rem 1rem;
-        border-radius: 10px;
-        margin-bottom: 2rem;
-        text-align: center;
-        color: white;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    body {
+        font-family: 'Poppins', sans-serif;
     }
-    
-    .main-title {
-        font-size: 3rem;
+    .theme-dark {
+        background: #1a202c;
+        color: #e2e8f0;
+    }
+    .theme-light {
+        background: #f7fafc;
+        color: #1a202c;
+    }
+    .header {
+        background: linear-gradient(135deg, #2b6cb0 0%, #9f7aea 100%);
+        padding: 3rem 2rem;
+        border-radius: 1rem;
+        text-align: center;
+        box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+        position: relative;
+        overflow: hidden;
+        margin-bottom: 2rem;
+    }
+    .header::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+        opacity: 0.5;
+    }
+    .header-title {
+        font-size: 2.75rem;
         font-weight: 700;
         margin-bottom: 0.5rem;
-        text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
-    
-    .main-subtitle {
-        font-size: 1.2rem;
+    .header-subtitle {
+        font-size: 1.25rem;
+        font-weight: 300;
         opacity: 0.9;
-        margin-bottom: 0;
     }
-    
-    .feature-card {
-        background: white;
+    .sidebar-card {
+        background: rgba(255,255,255,0.05);
+        backdrop-filter: blur(10px);
         padding: 1.5rem;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        border-left: 4px solid #667eea;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255,255,255,0.1);
         margin-bottom: 1rem;
     }
-    
     .metric-card {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        background: linear-gradient(135deg, #4c51bf 0%, #b794f4 100%);
         padding: 1rem;
-        border-radius: 8px;
+        border-radius: 0.75rem;
         text-align: center;
         color: white;
-        margin: 0.5rem 0;
-    }
-    
-    .hash-display {
-        background: #f8f9fa;
-        border: 2px dashed #dee2e6;
-        border-radius: 8px;
-        padding: 1rem;
-        font-family: 'Courier New', monospace;
-        word-break: break-all;
-        margin: 1rem 0;
-    }
-    
-    .status-success {
-        background: linear-gradient(135deg, #56ab2f 0%, #a8e6cf 100%);
-        color: white;
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 1rem 0;
-    }
-    
-    .status-warning {
-        background: linear-gradient(135deg, #f7971e 0%, #ffd200 100%);
-        color: white;
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 1rem 0;
-    }
-    
-    .ecommerce-card {
-        background: white;
-        border-radius: 15px;
-        padding: 1.5rem;
-        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-        transition: transform 0.3s ease, box-shadow 0.3s ease;
         margin-bottom: 1rem;
-        border: 1px solid #e0e0e0;
+        transition: transform 0.3s ease;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.2);
     }
-    
-    .ecommerce-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 15px 35px rgba(0,0,0,0.15);
+    .metric-card:hover {
+        transform: scale(1.05);
     }
-    
-    .platform-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 1rem;
-        padding-bottom: 0.5rem;
-        border-bottom: 2px solid #f0f0f0;
-    }
-    
-    .platform-logo {
-        width: 40px;
-        height: 40px;
-        border-radius: 8px;
-        margin-right: 1rem;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: bold;
-        color: white;
-    }
-    
-    .price-tag {
-        background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
-        color: white;
-        padding: 0.5rem 1rem;
-        border-radius: 20px;
-        font-weight: bold;
-        font-size: 1.1rem;
-        display: inline-block;
-        margin: 0.5rem 0;
-    }
-    
-    .product-specs {
-        background: #f8f9fa;
-        padding: 1rem;
-        border-radius: 8px;
-        margin: 1rem 0;
-    }
-    
-    .spec-item {
-        display: flex;
-        justify-content: space-between;
-        padding: 0.25rem 0;
-        border-bottom: 1px solid #dee2e6;
-    }
-    
-    .spec-item:last-child {
-        border-bottom: none;
-    }
-    
-    .action-button {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border: none;
-        padding: 0.75rem 1.5rem;
-        border-radius: 25px;
-        font-weight: bold;
-        cursor: pointer;
-        transition: all 0.3s ease;
-        width: 100%;
-        margin-top: 1rem;
-    }
-    
-    .action-button:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
-    }
-    
     .workflow-step {
         display: flex;
         align-items: center;
-        margin: 1rem 0;
+        background: rgba(255,255,255,0.1);
         padding: 1rem;
-        background: #f8f9fa;
-        border-radius: 8px;
-        border-left: 4px solid #667eea;
+        border-radius: 0.75rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
     }
-    
+    .workflow-step:hover {
+        background: rgba(255,255,255,0.2);
+        transform: translateX(8px);
+    }
     .step-number {
-        background: #667eea;
+        background: #ed64a6;
         color: white;
-        width: 30px;
-        height: 30px;
+        width: 2rem;
+        height: 2rem;
         border-radius: 50%;
         display: flex;
         align-items: center;
         justify-content: center;
         margin-right: 1rem;
-        font-weight: bold;
+        font-weight: 600;
+    }
+    .feature-card {
+        background: rgba(255,255,255,0.05);
+        backdrop-filter: blur(10px);
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+    }
+    .feature-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+        background: rgba(255,255,255,0.1);
+    }
+    .hash-display {
+        background: rgba(0,0,0,0.2);
+        border: 1px solid rgba(255,255,255,0.2);
+        border-radius: 0.5rem;
+        padding: 1rem;
+        font-family: 'Courier New', monospace;
+        word-break: break-all;
+        margin: 1rem 0;
+        color: #e2e8f0;
+    }
+    .status-success {
+        background: #38a169;
+        color: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+        animation: fadeIn 0.5s ease-in;
+    }
+    .status-warning {
+        background: #d69e2e;
+        color: white;
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+        animation: fadeIn 0.5s ease-in;
+    }
+    .ecommerce-card {
+        background: rgba(255,255,255,0.05);
+        backdrop-filter: blur(10px);
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        border: 1px solid rgba(255,255,255,0.1);
+        transition: all 0.3s ease;
+        margin-bottom: 1rem;
+    }
+    .ecommerce-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+    }
+    .platform-logo {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: 0.5rem;
+        margin-right: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        color: white;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    }
+    .price-tag {
+        background: linear-gradient(135deg, #ed64a6 0%, #f687b3 100%);
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 1rem;
+        font-weight: 600;
+        display: inline-block;
+        margin: 0.5rem 0;
+    }
+    .product-specs {
+        background: rgba(255,255,255,0.1);
+        padding: 1rem;
+        border-radius: 0.5rem;
+        margin: 1rem 0;
+    }
+    .spec-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+    .spec-item:last-child {
+        border-bottom: none;
+    }
+    .action-button {
+        background: linear-gradient(135deg, #ed64a6 0%, #9f7aea 100%);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        text-align: center;
+        transition: all 0.3s ease;
+        width: 100%;
+        margin-top: 1rem;
+    }
+    .action-button:hover {
+        background: linear-gradient(135deg, #d53f8c 0%, #7f9cf5 100%);
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    .progress-ring {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        margin: 1rem 0;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
     }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/circular-progressbar@1.0.0/dist/circularProgressBar.min.js"></script>
 """, unsafe_allow_html=True)
 
-# Header Section
+# Theme toggle
+theme = st.session_state.get("theme", "dark")
+if st.sidebar.button("🌙 Toggle Theme", key="theme_toggle"):
+    theme = "light" if theme == "dark" else "dark"
+    st.session_state.theme = theme
+
+# Apply theme
+st.markdown(f'<div class="theme-{theme}">', unsafe_allow_html=True)
+
+# Header
 st.markdown("""
-<div class="main-header">
-    <h1 class="main-title">🔒 DeduVault</h1>
-    <p class="main-subtitle">Next-Generation Decentralized Image Deduplication Platform</p>
-    <p style="font-size: 1rem; margin-top: 1rem; opacity: 0.8;">
-        Leveraging IPFS & Blockchain Technology for Secure, Transparent, and Efficient Digital Asset Management
-    </p>
+<div class="header">
+    <h1 class="header-title">🔒 DeduVault</h1>
+    <p class="header-subtitle">Revolutionary Decentralized Image Deduplication</p>
+    <p class="text-sm mt-2 opacity-80">Securely store and verify digital assets with IPFS and blockchain technology</p>
 </div>
 """, unsafe_allow_html=True)
 
-# Sidebar with information
+# Sidebar
 with st.sidebar:
-    st.markdown("### 📊 Platform Statistics")
-    st.metric("Files Processed", "12,847", "↗️ 23%")
-    st.metric("Storage Saved", "2.3 TB", "↗️ 15%")
-    st.metric("Active Users", "1,249", "↗️ 8%")
-    
-    st.markdown("---")
-    st.markdown("### 🔧 How It Works")
-    
+    st.markdown('<div class="sidebar-card"><h3 class="text-lg font-semibold">📊 Platform Analytics</h3></div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="metric-card">
+        <h4 class="text-2xl font-bold">12,847</h4>
+        <p class="text-sm">Files Processed</p>
+        <p class="text-xs text-green-300">↗️ 23%</p>
+    </div>
+    <div class="metric-card">
+        <h4 class="text-2xl font-bold">2.3 TB</h4>
+        <p class="text-sm">Storage Saved</p>
+        <p class="text-xs text-green-300">↗️ 15%</p>
+    </div>
+    <div class="metric-card">
+        <h4 class="text-2xl font-bold">1,249</h4>
+        <p class="text-sm">Active Users</p>
+        <p class="text-xs text-green-300">↗️ 8%</p>
+    </div>
+    """, unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-card"><h3 class="text-lg font-semibold">🔧 Workflow</h3></div>', unsafe_allow_html=True)
     workflow_steps = [
-        "Upload your image file",
-        "Generate SHA-256 hash",
-        "Store on IPFS network",
-        "Verify on blockchain",
-        "Detect duplicates instantly"
+        "Upload image file",
+        "Generate SHA-256 & phash",
+        "Check for duplicates",
+        "Store on IPFS",
+        "Record on blockchain"
     ]
-    
     for i, step in enumerate(workflow_steps, 1):
         st.markdown(f"""
-        <div class="workflow-step" style="color:black">
+        <div class="workflow-step">
             <div class="step-number">{i}</div>
-            <div>{step}</div>
+            <div class="text-sm">{step}</div>
         </div>
         """, unsafe_allow_html=True)
 
-# Main content area
+# Main content
 col1, col2 = st.columns([2, 1])
 
 with col1:
-    # Feature highlights
-    st.markdown("### 🚀 Key Features")
-    
+    st.markdown('<h3 class="text-xl font-semibold mb-4">🚀 Core Features</h3>', unsafe_allow_html=True)
     features = [
-        {
-            "title": "🔐 Cryptographic Security",
-            "desc": "SHA-256 hashing ensures data integrity and uniqueness verification"
-        },
-        {
-            "title": "🌐 IPFS Integration", 
-            "desc": "Decentralized storage with content-addressed data distribution"
-        },
-        {
-            "title": "⛓️ Blockchain Verification",
-            "desc": "Immutable record keeping with transparent transaction history"
-        },
-        {
-            "title": "⚡ Real-time Deduplication",
-            "desc": "Instant duplicate detection saves storage costs and bandwidth"
-        }
+        {"title": "🔐 Advanced Security", "desc": "SHA-256 and perceptual hashing for unmatched data integrity"},
+        {"title": "🌐 IPFS Storage", "desc": "Decentralized, content-addressed file storage"},
+        {"title": "⛓️ Blockchain Trust", "desc": "Immutable records for transparent verification"},
+        {"title": "⚡ Instant Deduplication", "desc": "Real-time detection of exact and visual duplicates"}
     ]
-    
     for feature in features:
         st.markdown(f"""
         <div class="feature-card">
-            <h4 style="margin-bottom: 0.5rem; color: #2c3e50;">{feature['title']}</h4>
-            <p style="margin: 0; color: #7f8c8d;">{feature['desc']}</p>
+            <h4 class="text-lg font-semibold">{feature['title']}</h4>
+            <p class="text-sm opacity-80">{feature['desc']}</p>
         </div>
         """, unsafe_allow_html=True)
 
 with col2:
-    st.markdown("### 📈 Live Metrics")
+    st.markdown('<h3 class="text-xl font-semibold mb-4">📈 System Metrics</h3>', unsafe_allow_html=True)
     st.markdown("""
     <div class="metric-card">
-        <h3>99.9%</h3>
-        <p>System Uptime</p>
+        <h3 class="text-2xl font-bold">99.9%</h3>
+        <p class="text-sm">Uptime</p>
     </div>
     <div class="metric-card">
-        <h3>< 2s</h3>
-        <p>Average Processing Time</p>
+        <h3 class="text-2xl font-bold">< 2s</h3>
+        <p class="text-sm">Processing Time</p>
     </div>
     <div class="metric-card">
-        <h3>256-bit</h3>
-        <p>Encryption Standard</p>
+        <h3 class="text-2xl font-bold">256-bit</h3>
+        <p class="text-sm">Encryption</p>
     </div>
     """, unsafe_allow_html=True)
 
 # Upload Section
-st.markdown("---")
-st.markdown("### 📤 Upload & Process Image")
+st.markdown('<hr class="border-t border-gray-700 my-6">', unsafe_allow_html=True)
+st.markdown('<h3 class="text-xl font-semibold mb-4">📤 Upload Image</h3>', unsafe_allow_html=True)
 uploaded_file = st.file_uploader(
-    "Select your image file (JPG, JPEG, PNG)",
-    type=["jpg", "jpeg", "png"],
-    help="Maximum file size: 10MB. Supported formats: JPG, JPEG, PNG"
+    "Choose an image (JPG, JPEG, PNG, WEBP)",
+    type=["jpg", "jpeg", "png", "webp"],
+    help="Max size: 10MB"
 )
 
-
 if uploaded_file is not None and uploaded_file.size > 0:
+    if uploaded_file.size > 10 * 1024 * 1024:
+        st.error("File size exceeds 10MB limit.")
+        st.stop()
+    
     file_bytes = uploaded_file.read()
+    file_name = uploaded_file.name
 
-    # Display Preview + Info in two columns
     col1, col2 = st.columns([1, 1])
     with col1:
-        st.markdown("#### 🖼️ Preview")
+        st.markdown('<h4 class="text-lg font-semibold mb-3">🖼️ Image Preview</h4>', unsafe_allow_html=True)
         if uploaded_file.type.startswith("image/"):
             image = Image.open(io.BytesIO(file_bytes))
-            st.image(image, use_column_width=True, caption=f"Uploaded: {uploaded_file.name}")
+            st.image(image, use_column_width=True, caption=f"{file_name}")
         else:
-            st.warning("⚠️ Uploaded file is not a supported image type.")
+            st.markdown('<div class="status-warning text-sm">⚠️ Unsupported image type.</div>', unsafe_allow_html=True)
 
-        # File information
-        st.markdown("#### 📋 File Information")
+        st.markdown('<h4 class="text-lg font-semibold mb-3 mt-4">📋 File Details</h4>', unsafe_allow_html=True)
         file_size = len(file_bytes)
         st.markdown(f"""
-        <div class="product-specs" style="color:black">
+        <div class="product-specs">
             <div class="spec-item">
-                <span><strong>Filename:</strong></span>
-                <span>{uploaded_file.name}</span>
+                <span class="text-sm font-medium">Filename:</span>
+                <span class="text-sm">{file_name}</span>
             </div>
             <div class="spec-item">
-                <span><strong>Size:</strong></span>
-                <span>{file_size:,} bytes ({file_size/1024:.1f} KB)</span>
+                <span class="text-sm font-medium">Size:</span>
+                <span class="text-sm">{file_size:,} bytes ({file_size/1024:.1f} KB)</span>
             </div>
             <div class="spec-item">
-                <span><strong>Type:</strong></span>
-                <span>{uploaded_file.type}</span>
+                <span class="text-sm font-medium">Type:</span>
+                <span class="text-sm">{uploaded_file.type}</span>
             </div>
         </div>
         """, unsafe_allow_html=True)
 
     with col2:
-        st.markdown("#### 🔐 Cryptographic Processing")
-        file_hash = hashlib.sha256(file_bytes).hexdigest()
-        st.markdown("**SHA-256 Hash:**")
-        st.markdown(f"""
-        <div class="hash-display">
-            <code>{file_hash}</code>
-        </div>
-        """, unsafe_allow_html=True)
+        st.markdown('<h4 class="text-lg font-semibold mb-3">🔐 Processing</h4>', unsafe_allow_html=True)
+        start_time = time.time()
+        sha256, phash = generate_hashes(file_bytes)
+        st.markdown('<p class="text-sm font-medium">SHA-256 Hash:</p>', unsafe_allow_html=True)
+        st.markdown(f'<div class="hash-display text-sm"><code>{sha256}</code></div>', unsafe_allow_html=True)
+        if phash:
+            st.markdown('<p class="text-sm font-medium">Perceptual Hash:</p>', unsafe_allow_html=True)
+            st.markdown(f'<div class="hash-display text-sm"><code>{phash}</code></div>', unsafe_allow_html=True)
 
-        with st.spinner("🔄 Processing file..."):
+        with st.spinner("🔄 Processing..."):
             progress_bar = st.progress(0)
             progress_bar.progress(25)
-            st.write("✅ Hash generated successfully")
+            st.markdown(f'<p class="text-sm">✅ Hashes generated in {time.time() - start_time:.2f}s</p>', unsafe_allow_html=True)
             time.sleep(0.5)
             progress_bar.progress(50)
-            st.write("🔄 Uploading to IPFS...")
+            st.markdown('<p class="text-sm">🔍 Checking duplicates...</p>', unsafe_allow_html=True)
 
-            try:
-                cid = upload_to_pinata(file_bytes, uploaded_file.name)
-                progress_bar.progress(75)
-                st.write("✅ IPFS upload completed")
-            except Exception as e:
-                st.error(f"❌ IPFS upload failed: {e}")
-                st.stop()
-
-            progress_bar.progress(100)
-            st.write("🔍 Checking for duplicates...")
-
-            exists = check_file_exists(file_hash)
-            if exists:
+            is_duplicate, message, sha256, phash = check_duplicate(file_bytes, file_name)
+            if is_duplicate:
                 st.markdown(f"""
                 <div class="status-warning">
-                    <h4>⚠️ Duplicate Detected!</h4>
-                    <p>This file already exists in our blockchain registry.</p>
+                    <h4 class="text-base font-semibold">⚠️ Duplicate Detected!</h4>
+                    <p class="text-sm">{message}</p>
                 </div>
                 """, unsafe_allow_html=True)
 
-                data = get_file_data(file_hash)
+                data = get_file_data(sha256)
                 if data:
-                    st.markdown("#### 📊 Existing Record Details")
-                    specs_html = '<div class="product-specs">'
-                    specs_html += f"""
-                        <div class="spec-item" style="color:black">
-                            <span><strong>Original CID:</strong></span>
-                            <span><code>{data.get('cid', 'N/A')}</code></span>
+                    st.markdown('<h4 class="text-lg font-semibold mb-3">📊 Record Details</h4>', unsafe_allow_html=True)
+                    st.markdown(f"""
+                    <div class="product-specs">
+                        <div class="spec-item">
+                            <span class="text-sm font-medium">CID:</span>
+                            <span class="text-sm"><code>{data.get('cid', 'N/A')}</code></span>
                         </div>
-                        <div class="spec-item" style="color:black">
-                            <span><strong>Uploader:</strong></span>
-                            <span><code>{data.get('uploader', 'N/A')}</code></span>
+                        <div class="spec-item">
+                            <span class="text-sm font-medium">Uploader:</span>
+                            <span class="text-sm"><code>{data.get('uploader', 'N/A')}</code></span>
                         </div>
-                        <div class="spec-item" style="color:black">
-                            <span><strong>Timestamp:</strong></span>
-                            <span>{data.get('timestamp', 'N/A')}</span>
+                        <div class="spec-item">
+                            <span class="text-sm font-medium">Status:</span>
+                            <span class="text-sm">{'Trusted' if data.get('uploader', '').lower() in trusted_uploaders else 'Untrusted'}</span>
                         </div>
-                    """
-                    specs_html += '</div>'
-                    st.markdown(specs_html, unsafe_allow_html=True)
+                        <div class="spec-item">
+                            <span class="text-sm font-medium">Timestamp:</span>
+                            <span class="text-sm">{data.get('timestamp', 'N/A')}</span>
+                        </div>
+                        <div class="spec-item">
+                            <span class="text-sm font-medium">Perceptual Hash:</span>
+                            <span class="text-sm"><code>{data.get('phash', 'N/A')}</code></span>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
+                # Commit and push database to GitHub
+                try:
+                    repo.index.add([DB_PATH])
+                    repo.index.commit(f"Update database for {file_name}")
+                    origin.push()
+                    logging.info("Pushed database to GitHub")
+                except Exception as e:
+                    logging.error(f"Git push failed: {e}")
+                    st.warning("⚠️ Database sync to GitHub failed. Duplicate detection may not persist.")
             else:
-                st.markdown(f"""
-                <div class="status-success">
-                    <h4>✅ New Image Uploaded Successfully!</h4>
-                    <p>No duplicates found.</p>
-                    <p><strong>IPFS CID:</strong> <code>{cid}</code></p>
-                    <p><strong>Gateway URL:</strong> <a href="https://gateway.pinata.cloud/ipfs/{cid}" target="_blank">View on IPFS</a></p>
-                </div>
-                """, unsafe_allow_html=True)
+                progress_bar.progress(75)
+                st.markdown('<p class="text-sm">✅ No duplicates. Uploading to IPFS...</p>', unsafe_allow_html=True)
+                try:
+                    cid = upload_to_pinata(file_bytes, file_name)
+                    st.markdown(f"""
+                    <div class="status-success">
+                        <h4 class="text-base font-semibold">✅ IPFS Upload Successful!</h4>
+                        <p class="text-sm"><strong>CID:</strong> <code>{cid}</code></p>
+                        <p class="text-sm"><a href="https://gateway.pinata.cloud/ipfs/{cid}" target="_blank" class="text-blue-400 hover:underline">View on IPFS</a></p>
+                    </div>
+                    """, unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"❌ IPFS upload failed: {e}")
+                    st.stop()
 
-                with st.spinner("🔗 Recording on blockchain..."):
-                    tx_hash = store_file_on_chain(file_hash, cid)
-
+                progress_bar.progress(100)
+                st.markdown('<p class="text-sm">🔗 Recording on blockchain...</p>', unsafe_allow_html=True)
+                tx_hash = store_file_on_chain(sha256, phash, cid)
                 if tx_hash:
                     st.markdown(f"""
                     <div class="status-success">
-                        <h4>🎉 Blockchain Registration Complete!</h4>
-                        <p><strong>Transaction Hash:</strong> <code>{tx_hash}</code></p>
-                        <p>Your file is now permanently recorded on the blockchain.</p>
+                        <h4 class="text-base font-semibold">🎉 Blockchain Registered!</h4>
+                        <p class="text-sm"><strong>Tx Hash:</strong> <code>{tx_hash}</code></p>
+                        <p class="text-sm">File permanently recorded.</p>
                     </div>
                     """, unsafe_allow_html=True)
                 else:
-                    st.error("❌ Blockchain transaction failed. Please try again.")
+                    st.error("❌ Blockchain transaction failed.")
+                # Commit and push database to GitHub
+                try:
+                    repo.index.add([DB_PATH])
+                    repo.index.commit(f"Update database for {file_name}")
+                    origin.push()
+                    logging.info("Pushed database to GitHub")
+                except Exception as e:
+                    logging.error(f"Git push failed: {e}")
+                    st.warning("⚠️ Database sync to GitHub failed. Duplicate detection may not persist.")
 
-# E-Commerce Platform Preview
-st.markdown("---")
-st.markdown("### 🛒 E-Commerce Platform Preview")
-st.markdown("*See how your image would appear across different e-commerce platforms*")
+# E-Commerce Preview
+st.markdown('<hr class="border-t border-gray-700 my-6">', unsafe_allow_html=True)
+st.markdown('<h3 class="text-xl font-semibold mb-4">🛒 E-Commerce Preview</h3>', unsafe_allow_html=True)
+st.markdown('<p class="text-sm opacity-80 mb-4">Preview your image on e-commerce platforms</p>', unsafe_allow_html=True)
 
-if st.button("🚀 Generate Platform Previews", type="primary"):
+if st.button("🚀 Generate Previews", type="primary", key="generate_previews"):
     if uploaded_file:
-        st.markdown("#### 📱 Cross-Platform Product Listings")
+        st.markdown('<h4 class="text-lg font-semibold mb-4">📱 Platform Listings</h4>', unsafe_allow_html=True)
+        is_duplicate, message, sha256, phash = check_duplicate(file_bytes, file_name)
+        data = get_file_data(sha256) if is_duplicate else None
+        uploader_status = 'Trusted' if data and data.get('uploader', '').lower() in trusted_uploaders else 'Untrusted'
+
         platforms = [
             {
                 "name": "Flipkart",
@@ -476,54 +572,46 @@ if st.button("🚀 Generate Platform Previews", type="primary"):
             }
         ]
 
-        # Create columns for platform cards
         cols = st.columns(len(platforms))
         for i, (col, platform) in enumerate(zip(cols, platforms)):
             with col:
                 st.markdown(f"""
                 <div class="ecommerce-card">
-                    <div class="platform-header">
+                    <div class="flex items-center mb-3 pb-2 border-b border-gray-700">
                         <div class="platform-logo" style="background-color: {platform['color']};">
                             {platform['logo']}
                         </div>
                         <div>
-                            <h3 style="margin: 0; color: #2c3e50;">{platform['name']}</h3>
-                            <p style="margin: 0; color: #7f8c8d; font-size: 0.9rem;">{platform['category']}</p>
+                            <h3 class="text-base font-semibold">{platform['name']}</h3>
+                            <p class="text-xs opacity-80">{platform['category']}</p>
                         </div>
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
-                # Product image
                 st.image(uploaded_file, use_column_width=True)
-                # Product details
-                st.markdown(f"**{platform['brand']}** - Premium Collection")
-                # Price section
+                st.markdown(f'<p class="text-sm font-semibold">{platform['brand']} - Premium Collection</p>', unsafe_allow_html=True)
+                st.markdown(f'<p class="text-sm">Status: {uploader_status}</p>', unsafe_allow_html=True)
                 col_price, col_rating = st.columns([1, 1])
                 with col_price:
                     st.markdown(f"""
                     <div class="price-tag">{platform['price']}</div>
-                    <div style="text-decoration: line-through; color: #888; margin-top: 0.25rem;">
-                        {platform['original_price']} <span style="color: #27ae60; font-weight: bold;">({platform['discount']})</span>
-                    </div>
+                    <div class="text-xs opacity-80 line-through">{platform['original_price']}</div>
+                    <div class="text-xs text-green-400 font-semibold">{platform['discount']}</div>
                     """, unsafe_allow_html=True)
                 with col_rating:
                     st.markdown(f"""
-                    <div style="margin-top: 0.5rem;">
-                        <div style="color: #f39c12;">★★★★☆ {platform['rating']}</div>
-                        <div style="font-size: 0.8rem; color: #888;">({platform['reviews']} reviews)</div>
+                    <div class="mt-2">
+                        <div class="text-sm text-yellow-400">★★★★☆ {platform['rating']}</div>
+                        <div class="text-xs opacity-80">({platform['reviews']} reviews)</div>
                     </div>
                     """, unsafe_allow_html=True)
-                # Specifications
-                st.markdown("**Product Specifications:**")
+                st.markdown('<p class="text-sm font-medium mt-2">Specifications:</p>', unsafe_allow_html=True)
                 for spec, value in platform['specs'].items():
-                    st.markdown(f"**{spec}:** {value}")
-                # Features
-                st.markdown("**Key Features:**")
+                    st.markdown(f'<p class="text-sm"><strong>{spec}:</strong> {value}</p>', unsafe_allow_html=True)
+                st.markdown('<p class="text-sm font-medium mt-2">Features:</p>', unsafe_allow_html=True)
                 for feature in platform['features']:
-                    st.markdown(f"✅ {feature}")
-                # Delivery info
-                st.info(f"🚚 {platform['delivery']}")
-                # Action buttons
+                    st.markdown(f'<p class="text-sm">✅ {feature}</p>', unsafe_allow_html=True)
+                st.markdown(f'<p class="text-sm text-blue-400">🚚 {platform['delivery']}</p>', unsafe_allow_html=True)
                 if platform['name'] == "Flipkart":
                     if st.button("🛒 Add to Cart", key=f"cart_{i}", type="primary"):
                         st.success(f"Added to {platform['name']} cart!")
@@ -534,4 +622,6 @@ if st.button("🚀 Generate Platform Previews", type="primary"):
                     if st.button("💳 Purchase", key=f"purchase_{i}", type="primary"):
                         st.success(f"Processing {platform['name']} order...")
     else:
-        st.warning("⚠️ Please upload an image first to generate platform previews.")
+        st.markdown('<div class="status-warning text-sm">⚠️ Please upload an image first.</div>', unsafe_allow_html=True)
+
+st.markdown('</div>', unsafe_allow_html=True)

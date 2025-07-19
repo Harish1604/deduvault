@@ -1,35 +1,4 @@
-# Python bytecode & cache
+.env
 __pycache__/
-*.py[cod]
-
-# Virtual environment
+*.pyc
 venv/
-.env/
-
-# Streamlit secrets (super important)
-streamlit/secrets.toml
-
-# Configs and keys
-config.py
-*.key
-*.pem
-
-# VS Code / macOS clutter
-.vscode/
-.DS_Store
-
-# Logs
-*.log
-
-# Pytest / Coverage
-.pytest_cache/
-.coverage
-htmlcov/
-
-# Node.js (if using any JS tools)
-node_modules/
-
-# Smart contract artifacts (if you used Hardhat/Truffle)
-build/
-artifacts/
-cache/

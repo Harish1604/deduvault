@@ -1,13 +1,9 @@
-# Core Web3 interaction
-web3==7.12.0
-
-# HTTP requests to Pinata
+streamlit==1.38.0
+web3==7.2.0
+Pillow==10.4.0
+imagehash==4.3.1
 requests==2.32.3
-
-# Streamlit frontend
-streamlit==1.34.0
-
-# Crypto hash (already in hashlib but for completeness)
-pycryptodome==3.20.0
-
-
+python-dotenv==1.0.1
+numpy
+scipy
+gitpython
