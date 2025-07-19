@@ -1,157 +1,140 @@
 # 🔒 DeduVault
+Decentralized Image Deduplication Platform using IPFS & Blockchain
 
-**Decentralized Image Deduplication Platform using IPFS & Blockchain**
-
-> Secure your digital assets, detect duplicates instantly, and visualize content across platforms — all powered by Web3.
-
----
+Secure your digital assets, detect duplicates instantly, and visualize content across platforms — all powered by Web3.
 
 ## 🚀 Overview
-
-**DeduVault** is a next-generation image deduplication and verification system. Built with **IPFS**, **Ethereum Blockchain**, and **Streamlit**, it allows users to:
-
+DeduVault is a next-generation image deduplication and verification system. Built with IPFS, Ethereum Blockchain, and Streamlit, it allows users to:
 - Upload image files.
-- Generate a **SHA-256 hash**.
-- Store on **IPFS via Pinata**.
-- Check for duplicates using **on-chain verification**.
-- **Register new files** on-chain with smart contracts.
-- Simulate e-commerce listings across **Flipkart, Amazon, and Myntra**.
-
----
+- Generate SHA-256 and perceptual (phash) hashes.
+- Store on IPFS via Pinata.
+- Check for duplicates (exact and visual) using on-chain verification.
+- Register new files on-chain with smart contracts.
+- Simulate e-commerce listings across Flipkart, Amazon, and Myntra.
+- Verify trusted uploaders for authenticity.
 
 ## 🌐 Tech Stack
-
-| Layer            | Tech Used                          |
-|------------------|------------------------------------|
-| 💻 Frontend      | Streamlit + HTML/CSS               |
-| 🧠 Hashing       | SHA-256 (`hashlib`)                |
-| 📦 Storage       | IPFS via [Pinata](https://pinata.cloud) |
-| 🔗 Blockchain    | Ethereum (Testnet) + `web3.py`     |
-| 📜 Smart Contract| Solidity (Deployed via Remix IDE) |
-| 🧠 Logic         | Python: `interact.py`, `uploader.py` |
-
----
+| Layer         | Tech Used                                     |
+|---------------|-----------------------------------------------|
+| 💻 Frontend   | Streamlit + HTML/CSS                         |
+| 🧠 Hashing    | SHA-256 (hashlib), Perceptual Hash (imagehash) |
+| 📦 Storage    | IPFS via Pinata                              |
+| 🔗 Blockchain | Ethereum Sepolia Testnet + web3.py           |
+| 📜 Smart Contract | Solidity (Deployed via Remix IDE)        |
+| 🧠 Logic      | Python: interact.py, uploader.py, hasher.py   |
+| 📊 Database   | SQLite (dedup_db.sqlite)                     |
 
 ## 📸 Features
-
-- 🔐 **Cryptographic Security** – Unique SHA-256 hashing per image
-- 🌐 **IPFS Integration** – Decentralized content-addressed storage
-- ⛓️ **Blockchain Verification** – Immutable registry with smart contracts
-- ⚡ **Real-time Deduplication** – Alerts on existing file hashes
-- 🛍️ **E-commerce Simulation** – Flipkart, Amazon & Myntra styled preview cards
-- 📊 **Live Stats Dashboard** – Uptime, metrics, and storage saved
-
----
+- 🔐 **Cryptographic Security**: SHA-256 for exact matches, perceptual hashing for visual similarity.
+- 🌐 **IPFS Integration**: Decentralized content-addressed storage.
+- ⛓️ **Blockchain Verification**: Immutable registry with smart contracts.
+- ⚡ **Real-time Deduplication**: Detects exact and visually similar duplicates.
+- 🛍️ **E-commerce Simulation**: Flipkart, Amazon, Myntra-styled previews with trusted/untrusted status.
+- 📊 **Live Stats Dashboard**: Uptime, metrics, and storage saved.
 
 ## 📂 Project Structure
-
-```
-📁 deduvault/
+deduvault/
 ├── contracts/
-│   └── DedupStorage_abi.json      # ABI from Remix (Solidity contract compiled)
+│   ├── DedupStorage.sol          # Solidity smart contract with phash support
+│   └── DedupStorage_abi.json     # Compiled ABI
 ├── utils/
-│   └── hasher.py                  # SHA-256 hash generator
-├── interact.py                    # Blockchain interaction logic
-├── uploader.py                    # IPFS upload + hash check
-├── streamlit_app.py               # Frontend UI with Streamlit
+│   └── hasher.py                 # SHA-256 and phash generation
 ├── .streamlit/
-│   └── secrets.toml               # 🔒 Secure secrets (DO NOT COMMIT)
-├── requirements.txt               # Python dependencies
-└── README.md                      # You’re reading it now
-```
+│   └── secrets.toml              # Secure secrets (DO NOT COMMIT)
+├── data/
+│   └── dedup_db.sqlite           # SQLite database for deduplication
+├── interact.py                   # Blockchain interaction logic
+├── uploader.py                   # IPFS upload and deduplication logic
+├── streamlit_app.py              # Streamlit frontend UI
+├── .env                          # Local secrets (DO NOT COMMIT)
+├── requirements.txt              # Python dependencies
+├── .gitignore                    # Git ignore file
+└── README.md                     # Project documentation
 
----
+
 
 ## 🧠 How It Works
-
-### 🔁 Workflow
-
 1. User uploads an image file.
-2. App generates a **SHA-256 hash** from the file.
-3. File is uploaded to **IPFS** via the Pinata API.
-4. The hash is checked on-chain for duplicates.
-5. If no duplicate is found, **CID + hash** are stored in a smart contract.
-6. Users receive the IPFS URL + transaction confirmation.
-7. Optional: Preview your image across e-commerce platforms.
-
----
+2. App generates SHA-256 and perceptual (phash) hashes.
+3. Checks for duplicates in SQLite DB and smart contract.
+4. If no duplicate, uploads to IPFS via Pinata and stores metadata on-chain.
+5. Displays IPFS CID, transaction hash, and e-commerce previews with trusted/untrusted status.
 
 ## 🧪 Smart Contract Details
-
-- **Name**: `DedupStorage.sol`
+- **Name**: DedupStorage.sol
 - **Functions**:
-  - `storeFile(fileHash, cid)`
-  - `fileExists(fileHash)`
-  - `getFile(fileHash)`
-- **Deployed On**: Ethereum Sepolia Testnet (via Remix IDE)
-- **Contract Address**: `0x3c5535F2d83049e816586b89D4585cAD31bB6f87`
+  - `storeFile(sha256Hash, phash, ipfsCID)`
+  - `fileExists(sha256Hash, phash)`
+  - `getFile(sha256Hash)`
+- **Deployed On**: Ethereum Sepolia Testnet
+- **Contract Address**: (Update with your deployed address)
 
----
+## 🔐 Secrets Setup
+For local development, create `.env`:
+```bash
+PINATA_API_KEY=your-pinata-api-key
+PINATA_SECRET_API_KEY=your-pinata-secret-key
+WALLET_ADDRESS=your-ethereum-wallet-address
+PRIVATE_KEY=your-private-key
+INFURA_RPC_URL=https://sepolia.infura.io/v3/your-infura-project-id
+CONTRACT_ADDRESS=your-deployed-contract-address
 
-## 🔐 Streamlit Secrets Setup (Required for Deployment)
+For Streamlit Cloud, add to Secrets Management:
 
-### 📁 Path: `.streamlit/secrets.toml`
+Go to your app → Settings → Secrets tab → Paste the above content (without .env).
 
-To securely manage your API keys and wallet credentials, create a `.streamlit/secrets.toml` file **(not pushed to GitHub)** with the following:
+🚫 Sensitive Files & Security
+Ensure these are in .gitignore:
 
-```toml
-PINATA_API_KEY = "your-pinata-api-key"
-PINATA_SECRET_KEY = "your-pinata-secret-key"
-WALLET_ADDRESS = "your-ethereum-wallet-address"
-PRIVATE_KEY = "your-private-key"
-INFURA_RPC_URL = "https://sepolia.infura.io/v3/your-infura-project-id"
-```
-
-### 📌 For Streamlit Cloud Deployment:
-- Go to your app → `Settings` → `Secrets` tab → Paste the above content there.
-
----
-
-## 🚫 Sensitive Files & Security
-
-The following files should **never** be committed or exposed:
-
-```
-# .gitignore entries
 .streamlit/secrets.toml
-config.py
+data/dedup_db.sqlite
+.env
 *.key
 *.pem
 __pycache__/
 *.pyc
-.env/
 venv/
-```
 
-You can check the full `.gitignore` file inside the repo.
+🌍 Live Deployment
+Deployed on Streamlit Cloud (add link after deployment).
+Run locally: streamlit run streamlit_app.py
+👨‍💻 Author
+Harish J. (aka Captain)
 
----
+Top 15 Finalist – Sony AITRIOS Hackathon | Full-Stack + Blockchain Developer
 
-## 🌍 Live Deployment
+GitHub | LinkedIn
 
-> 🎯 This app is deployed on **Streamlit Cloud**  
-> 🔗 Add your live link here (once deployed):  
-> 👉 [Open DeduVault Live](https://deduvault.streamlit.app)
-
----
-
-## 👨‍💻 Author
-
-**Harish J. (aka Captain)**  
-Top 15 Finalist – Sony AITRIOS Hackathon | Full-Stack + Blockchain Developer  
-[GitHub](https://github.com/Harish1604) | [LinkedIn](https://linkedin.com/in/harish16042005)
-
----
-
-## 📜 License
-
+📜 License
 MIT License © 2025 Harish J.
 
----
 
-## ✨ Extras
-
-- Built with ❤️ using Web3 and Open Source tools.
-- Feel free to fork, star, and contribute.
 
 ---
+
+### Implementation Steps
+1. **Set Up File Structure**:
+   - Create `data/` directory.
+   - Create `.env` with your credentials.
+   - Update `.gitignore`.
+
+2. **Recompile and Deploy Smart Contract**:
+   - Open Remix IDE<a href="https://remix.ethereum.org" target="_blank" rel="noopener noreferrer nofollow"></a>.
+   - Copy the updated `DedupStorage.sol`.
+   - Compile with Solidity `0.8.0` or higher.
+   - Deploy to Sepolia Testnet via MetaMask (ensure Sepolia ETH).
+   - Save ABI to `contracts/DedupStorage_abi.json`.
+   - Update `.env` with new `CONTRACT_ADDRESS`.
+
+3. **Install Dependencies**:
+   ```bash
+   pip install -r requirements.txt
+
+
+Initialize SQLite Database:
+
+from uploader import init_db
+init_db()
+
+Test Locally:
+streamlit run streamlit_app.py
