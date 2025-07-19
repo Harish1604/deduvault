@@ -11,6 +11,12 @@
       {
         "indexed": false,
         "internalType": "string",
+        "name": "phash",
+        "type": "string"
+      },
+      {
+        "indexed": false,
+        "internalType": "string",
         "name": "ipfsCID",
         "type": "string"
       },
@@ -39,6 +45,11 @@
       },
       {
         "internalType": "string",
+        "name": "phash",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
         "name": "ipfsCID",
         "type": "string"
       }
@@ -52,7 +63,12 @@
     "inputs": [
       {
         "internalType": "string",
-        "name": "",
+        "name": "sha256Hash",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "phash",
         "type": "string"
       }
     ],
@@ -62,6 +78,11 @@
         "internalType": "bool",
         "name": "",
         "type": "bool"
+      },
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
       }
     ],
     "stateMutability": "view",
@@ -79,18 +100,66 @@
     "outputs": [
       {
         "internalType": "string",
-        "name": "ipfsCID",
+        "name": "",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "",
         "type": "string"
       },
       {
         "internalType": "address",
-        "name": "uploader",
+        "name": "",
         "type": "address"
       },
       {
         "internalType": "uint256",
-        "name": "timestamp",
+        "name": "",
         "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "name": "phashExists",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "string",
+        "name": "",
+        "type": "string"
+      }
+    ],
+    "name": "sha256Exists",
+    "outputs": [
+      {
+        "internalType": "bool",
+        "name": "",
+        "type": "bool"
       }
     ],
     "stateMutability": "view",

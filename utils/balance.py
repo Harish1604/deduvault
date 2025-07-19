@@ -1,20 +1,22 @@
 from web3 import Web3
 
-# ✅ Connect to an Ethereum provider (replace with your actual RPC URL)
+# Replace with your actual Infura RPC URL
 rpc_url = "https://sepolia.infura.io/v3/03729448df4641ab9d35be871215138c"
-w3 = Web3(Web3.HTTPProvider(rpc_url))
 
-# ✅ Your wallet address
-wallet_address = "0x66c720EaDEEc55048fFCb86A0300123D5fe0b1a7"
+# Connect to Web3
+web3 = Web3(Web3.HTTPProvider(rpc_url))
 
-# ✅ Check if connection is successful
-if not w3.is_connected():
-    print("⚠️ Not connected to the network!")
+# Wallet address to check (Sepolia or mainnet, depending on the RPC)
+wallet_address = "0x92643AEafaf65d9cA08347A9e8e09c7A927b1362"
+
+# Check connection
+if web3.is_connected():
+    # Get balance in Wei
+    balance_wei = web3.eth.get_balance(wallet_address)
+
+    # Convert Wei to Ether
+    balance_eth = web3.from_wei(balance_wei, 'ether')
+
+    print(f"Wallet balance: {balance_eth} ETH")
 else:
-    # ✅ Get balance in wei
-    balance_wei = w3.eth.get_balance(wallet_address)
-
-    # ✅ Convert to Ether
-    balance_eth = w3.from_wei(balance_wei, 'ether')
-
-    print(f"Wallet Balance: {balance_eth} ETH")
+    print("Connection failed ")
