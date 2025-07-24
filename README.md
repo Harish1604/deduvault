@@ -167,13 +167,7 @@ requests.post(PINATA_URL, headers=headers, files=files)
 
 ---
 
-## 📌 Notes for CVIP Submission
 
-- Problem tackled: **Cloud image duplication** across distributed platforms
-- Novelty: Combines **decentralized IPFS**, **blockchain-backed metadata**, and **image similarity (pHash)**
-- Achieves **fast lookup** using SQLite and visual comparison using pHash
-
----
 
 ## 🚀 Future Enhancements
 
