@@ -1,4 +1,4 @@
-# DeduVault: Decentralized File Deduplication using IPFS, Blockchain, and Perceptual Hashing
+# DeduVault: A Decentralized Visual Deduplication Framework using Perceptual Hashing and Blockchain-based IPFS Storage
 
 ## 📌 Abstract
 
