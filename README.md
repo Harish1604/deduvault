@@ -1,140 +1,85 @@
-# 🔒 DeduVault
-Decentralized Image Deduplication Platform using IPFS & Blockchain
+# DeduVault
 
-Secure your digital assets, detect duplicates instantly, and visualize content across platforms — all powered by Web3.
+**DeduVault: A Decentralized Visual Deduplication Framework using Perceptual Hashing and Blockchain-based IPFS Storage**
 
-## 🚀 Overview
-DeduVault is a next-generation image deduplication and verification system. Built with IPFS, Ethereum Blockchain, and Streamlit, it allows users to:
-- Upload image files.
-- Generate SHA-256 and perceptual (phash) hashes.
-- Store on IPFS via Pinata.
-- Check for duplicates (exact and visual) using on-chain verification.
-- Register new files on-chain with smart contracts.
-- Simulate e-commerce listings across Flipkart, Amazon, and Myntra.
-- Verify trusted uploaders for authenticity.
+## 📌 Abstract
 
-## 🌐 Tech Stack
-| Layer         | Tech Used                                     |
-|---------------|-----------------------------------------------|
-| 💻 Frontend   | Streamlit + HTML/CSS                         |
-| 🧠 Hashing    | SHA-256 (hashlib), Perceptual Hash (imagehash) |
-| 📦 Storage    | IPFS via Pinata                              |
-| 🔗 Blockchain | Ethereum Sepolia Testnet + web3.py           |
-| 📜 Smart Contract | Solidity (Deployed via Remix IDE)        |
-| 🧠 Logic      | Python: interact.py, uploader.py, hasher.py   |
-| 📊 Database   | SQLite (dedup_db.sqlite)                     |
+DeduVault is a decentralized framework designed to prevent duplicate image storage using a blend of perceptual hashing (phash), IPFS for decentralized storage, and Ethereum smart contracts. It offers an intelligent solution for deduplication by identifying visually similar images, even if altered (resized, renamed, or compressed), and verifying uniqueness before committing them to the blockchain ledger and IPFS.
 
-## 📸 Features
-- 🔐 **Cryptographic Security**: SHA-256 for exact matches, perceptual hashing for visual similarity.
-- 🌐 **IPFS Integration**: Decentralized content-addressed storage.
-- ⛓️ **Blockchain Verification**: Immutable registry with smart contracts.
-- ⚡ **Real-time Deduplication**: Detects exact and visually similar duplicates.
-- 🛍️ **E-commerce Simulation**: Flipkart, Amazon, Myntra-styled previews with trusted/untrusted status.
-- 📊 **Live Stats Dashboard**: Uptime, metrics, and storage saved.
+## 🛠️ Tech Stack
 
-## 📂 Project Structure
-deduvault/
-├── contracts/
-│   ├── DedupStorage.sol          # Solidity smart contract with phash support
-│   └── DedupStorage_abi.json     # Compiled ABI
-├── utils/
-│   └── hasher.py                 # SHA-256 and phash generation
-├── .streamlit/
-│   └── secrets.toml              # Secure secrets (DO NOT COMMIT)
-├── data/
-│   └── dedup_db.sqlite           # SQLite database for deduplication
-├── interact.py                   # Blockchain interaction logic
-├── uploader.py                   # IPFS upload and deduplication logic
-├── streamlit_app.py              # Streamlit frontend UI
-├── .env                          # Local secrets (DO NOT COMMIT)
-├── requirements.txt              # Python dependencies
-├── .gitignore                    # Git ignore file
-└── README.md                     # Project documentation
+- **Frontend/UI**: Python + Streamlit
+- **Backend**: Python (web3.py, imagehash, hashlib)
+- **Blockchain**: Solidity smart contract on Sepolia Testnet
+- **Decentralized Storage**: IPFS via Pinata and Infura
+- **Deduplication**: Perceptual Hashing (phash), SHA-256 for file-level integrity
 
+## 🧠 Key Features
 
+- ✅ Visual deduplication using **phash** (detects similar images)
+- ✅ Secure storage with **IPFS** via Pinata
+- ✅ Duplicate verification with **SHA-256** and local database
+- ✅ On-chain verification via **Ethereum Smart Contracts**
+- ✅ Beautiful **e-commerce style UI** to preview image listings (Flipkart, Amazon, Myntra)
+- ✅ Streamlit secrets for secure key handling
 
-## 🧠 How It Works
-1. User uploads an image file.
-2. App generates SHA-256 and perceptual (phash) hashes.
-3. Checks for duplicates in SQLite DB and smart contract.
-4. If no duplicate, uploads to IPFS via Pinata and stores metadata on-chain.
-5. Displays IPFS CID, transaction hash, and e-commerce previews with trusted/untrusted status.
+## 🖼️ System Workflow
 
-## 🧪 Smart Contract Details
-- **Name**: DedupStorage.sol
-- **Functions**:
-  - `storeFile(sha256Hash, phash, ipfsCID)`
-  - `fileExists(sha256Hash, phash)`
-  - `getFile(sha256Hash)`
-- **Deployed On**: Ethereum Sepolia Testnet
-- **Contract Address**: (Update with your deployed address)
+1. **Upload Image**
+2. Compute **SHA-256** and **Perceptual Hash**
+3. Check for duplicates locally (dedup_db.json) and on blockchain
+4. If unique, upload to **IPFS** and store **CID + Hashes** in Smart Contract
+5. Display result in UI with platform-styled previews
 
-## 🔐 Secrets Setup
-For local development, create `.env`:
-```bash
-PINATA_API_KEY=your-pinata-api-key
-PINATA_SECRET_API_KEY=your-pinata-secret-key
-WALLET_ADDRESS=your-ethereum-wallet-address
-PRIVATE_KEY=your-private-key
-INFURA_RPC_URL=https://sepolia.infura.io/v3/your-infura-project-id
-CONTRACT_ADDRESS=your-deployed-contract-address
+## 🔗 Smart Contract (`DedupStorage.sol`)
 
-For Streamlit Cloud, add to Secrets Management:
+- `storeFile(hash, cid)` – stores hash and IPFS CID
+- `fileExists(hash)` – checks if a hash is already stored
+- `getFile(hash)` – retrieves CID for a hash
 
-Go to your app → Settings → Secrets tab → Paste the above content (without .env).
+Deployed on Sepolia Ethereum Testnet, integrated via `web3.py` and Infura.
 
-🚫 Sensitive Files & Security
-Ensure these are in .gitignore:
+## 📂 Local Deduplication DB
 
-.streamlit/secrets.toml
-data/dedup_db.sqlite
-.env
-*.key
-*.pem
-__pycache__/
-*.pyc
-venv/
+A local JSON file (`dedup_db.json`) maintains:
+```json
+{
+  "file_hash": {
+    "phash": "<perceptual hash>",
+    "cid": "<ipfs cid>",
+    "timestamp": "<upload time>"
+  }
+}
+```
 
-🌍 Live Deployment
-Deployed on Streamlit Cloud (add link after deployment).
-Run locally: streamlit run streamlit_app.py
-👨‍💻 Author
-Harish J. (aka Captain)
+## 🛡️ Security
 
-Top 15 Finalist – Sony AITRIOS Hackathon | Full-Stack + Blockchain Developer
+- Uses **Streamlit Secrets Manager** for API keys & Infura credentials.
+- No hardcoded keys or sensitive data.
 
-GitHub | LinkedIn
+## 🧪 Sample Output
 
-📜 License
-MIT License © 2025 Harish J.
+When uploading an image, the system detects duplicates visually and shows:
 
+- ✅ *"Image already exists (visually similar)"* – if phash matches
+- ✅ *"New image stored on IPFS and blockchain"* – if unique
 
+## 📸 Demo UI
+
+Streamlit UI displays image in 3-column layout (Amazon, Flipkart, Myntra themes).
+
+## 📚 For CVIP Submission
+
+- Title: **"DeduVault: A Decentralized Visual Deduplication Framework using Perceptual Hashing and Blockchain-based IPFS Storage"**
+- Categories: Computer Vision, Image Processing, Storage Optimization, Blockchain
+- Suitable for: CVIP 2025 conference submission
 
 ---
 
-### Implementation Steps
-1. **Set Up File Structure**:
-   - Create `data/` directory.
-   - Create `.env` with your credentials.
-   - Update `.gitignore`.
+## 🧑‍💻 Author
 
-2. **Recompile and Deploy Smart Contract**:
-   - Open Remix IDE<a href="https://remix.ethereum.org" target="_blank" rel="noopener noreferrer nofollow"></a>.
-   - Copy the updated `DedupStorage.sol`.
-   - Compile with Solidity `0.8.0` or higher.
-   - Deploy to Sepolia Testnet via MetaMask (ensure Sepolia ETH).
-   - Save ABI to `contracts/DedupStorage_abi.json`.
-   - Update `.env` with new `CONTRACT_ADDRESS`.
+**Harish J** — Final year Computer Science student, Blockchain & Cloud Enthusiast.
 
-3. **Install Dependencies**:
-   ```bash
-   pip install -r requirements.txt
+---
 
-
-Initialize SQLite Database:
-
-from uploader import init_db
-init_db()
-
-Test Locally:
-streamlit run streamlit_app.py
+> For more details or collaboration, visit: [Portfolio](https://harishx64.vercel.app)
