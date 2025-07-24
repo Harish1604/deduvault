@@ -1,84 +1,185 @@
-# DeduVault
-
-**DeduVault: A Decentralized Visual Deduplication Framework using Perceptual Hashing and Blockchain-based IPFS Storage**
+# DeduVault: Decentralized File Deduplication using IPFS, Blockchain, and Perceptual Hashing
 
 ## 📌 Abstract
 
-DeduVault is a decentralized framework designed to prevent duplicate image storage using a blend of perceptual hashing (phash), IPFS for decentralized storage, and Ethereum smart contracts. It offers an intelligent solution for deduplication by identifying visually similar images, even if altered (resized, renamed, or compressed), and verifying uniqueness before committing them to the blockchain ledger and IPFS.
-
-## 🛠️ Tech Stack
-
-- **Frontend/UI**: Python + Streamlit
-- **Backend**: Python (web3.py, imagehash, hashlib, sqlite3)
-- **Blockchain**: Solidity smart contract on Sepolia Testnet
-- **Decentralized Storage**: IPFS via Pinata and Infura
-- **Deduplication**: Perceptual Hashing (phash), SHA-256 for file-level integrity
-- **Database**: SQLite for local metadata storage (`dedup_db.sqlite`)
-
-## 🧠 Key Features
-
-- ✅ Visual deduplication using **phash** (detects similar images)
-- ✅ Secure storage with **IPFS** via Pinata
-- ✅ Duplicate verification with **SHA-256** and SQLite
-- ✅ On-chain verification via **Ethereum Smart Contracts**
-- ✅ Beautiful **e-commerce style UI** to preview image listings (Flipkart, Amazon, Myntra)
-- ✅ Streamlit secrets for secure key handling
-
-## 🔍 What is Perceptual Hashing (phash)?
-
-Unlike cryptographic hashes (like SHA-256), which change completely even if one pixel is modified, **perceptual hashing (phash)** generates a fingerprint based on an image’s *visual appearance*. It allows us to detect duplicates that are:
-
-- Slightly resized or compressed
-- Renamed or re-encoded (JPEG/PNG)
-- Brightness/contrast adjusted
-
-### 🔬 How it works (Simplified):
-1. Resize the image to a small grayscale version (e.g., 32x32)
-2. Apply Discrete Cosine Transform (DCT) to capture frequency components
-3. Extract a fingerprint (hash) from top-left DCT values
-4. Compare hashes using **Hamming Distance** — small distance = visually similar
-
-This makes phash **perfect for visual deduplication** in DeduVault.
-
-## 🖼️ System Workflow
-
-1. **Upload Image**
-2. Compute **SHA-256** and **Perceptual Hash**
-3. Check for duplicates locally (`dedup_db.sqlite`) and on blockchain
-4. If unique, upload to **IPFS** and store **CID + Hashes** in Smart Contract
-5. Display result in UI with platform-styled previews
-
-## 🔗 Smart Contract (`DedupStorage.sol`)
-
-- `storeFile(hash, cid)` – stores hash and IPFS CID
-- `fileExists(hash)` – checks if a hash is already stored
-- `getFile(hash)` – retrieves CID for a hash
-
-Deployed on Sepolia Ethereum Testnet, integrated via `web3.py` and Infura.
-
-
-## 🛡️ Security
-
-- Uses **Streamlit Secrets Manager** for API keys & Infura credentials.
-- No hardcoded keys or sensitive data.
-
-## 🧪 Sample Output
-
-When uploading an image, the system detects duplicates visually and shows:
-
-- ✅ *"Image already exists (visually similar)"* – if phash matches
-- ✅ *"New image stored on IPFS and blockchain"* – if unique
-
-## 📸 Demo UI
-
-Streamlit UI displays image in 3-column layout (Amazon, Flipkart, Myntra themes).
-
-
-
-## 🧑‍💻 Author
-
-**Harish J** and **Venkatesh K** — Third year Computer Science students, Blockchain & Cloud Enthusiast.
+DeduVault is a decentralized system designed to detect and eliminate duplicate or near-duplicate image files across cloud platforms. It leverages IPFS for distributed storage, Ethereum smart contracts for integrity and metadata management, and **Perceptual Hashing (pHash)** and **SHA-256** for robust deduplication. The project targets applications in e-commerce where multiple platforms may host visually similar product images.
 
 ---
 
-> For more details or collaboration, visit: [Portfolio](https://harishx64.vercel.app)
+## 🧠 Technologies Used
+
+| Layer         | Tech Stack                           |
+| ------------- | ------------------------------------ |
+| Frontend      | Streamlit (Python)                   |
+| Backend       | Python, Web3.py, SQLite3             |
+| Blockchain    | Solidity, Ethereum (Sepolia testnet) |
+| Storage       | IPFS (via Pinata)                    |
+| Deduplication | SHA-256, pHash (Perceptual Hashing)  |
+
+---
+
+## ⚙️ System Architecture
+
+```
++--------------+        +--------------------+        +----------------+
+|  Streamlit   | <----> |   Flask + Web3.py   | <----> | Ethereum SC    |
+|  Frontend UI |        | Backend Logic      |        | (Sepolia)      |
++--------------+        +--------------------+        +----------------+
+       |                         |                               |
+       |                         V                               |
+       |               +------------------+                     |
+       +-------------> | IPFS (via Pinata) | <------------------+
+                       +------------------+
+                               |
+                               V
+                     +----------------------+
+                     | dedup_db.sqlite      |
+                     | (local dedup DB)     |
+                     +----------------------+
+```
+
+---
+
+## 🔍 Deduplication Algorithm
+
+### 1. SHA-256 Hashing
+
+- Generates a hash based on raw file bytes.
+- If an exact match is found, it's a duplicate.
+
+### 2. Perceptual Hashing (pHash)
+
+- Used to detect **visually similar images** even if resized, reformatted, or renamed.
+- Computes a perceptual hash and compares it against existing entries.
+- If the Hamming Distance ≤ threshold (e.g., 5), it's treated as a near-duplicate.
+
+```python
+from imagehash import phash
+from PIL import Image
+
+# Compute pHash from file
+def compute_phash(file_path):
+    image = Image.open(file_path)
+    return str(phash(image))
+```
+
+---
+
+## 🧾 Smart Contract: `DedupStorage.sol`
+
+### 📁 Functions
+
+```solidity
+function storeFile(bytes32 sha256Hash, string memory cid) public {}
+function fileExists(bytes32 sha256Hash) public view returns (bool) {}
+function getFile(bytes32 sha256Hash) public view returns (string memory) {}
+```
+
+- Ensures no duplicate SHA-256 entries get re-uploaded.
+- IPFS CID is retrieved based on the hash.
+
+### 🔐 Deployment
+
+- Deployed on Sepolia Testnet using Infura and Web3.py
+- Verified and interactable via Remix or Etherscan
+
+---
+
+## 🗂️ Database: `dedup_db.sqlite`
+
+### 📐 Schema
+
+```sql
+CREATE TABLE IF NOT EXISTS files (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sha256 TEXT UNIQUE,
+    phash TEXT,
+    cid TEXT,
+    upload_time TEXT
+);
+```
+
+### 🔍 Sample Queries
+
+- Check SHA duplicate:
+
+```sql
+SELECT * FROM files WHERE sha256 = ?;
+```
+
+- Find near-duplicates using pHash:
+
+```python
+from imagehash import phash
+import sqlite3
+
+# Compare pHash distances
+cur.execute("SELECT phash, cid FROM files")
+for db_phash, cid in cur.fetchall():
+    if hamming_distance(input_phash, db_phash) <= 5:
+        print("Near duplicate found:", cid)
+```
+
+---
+
+## 💻 Streamlit Frontend UI
+
+### 🎨 Features
+
+- Upload image → Check duplicates → View CID/IPFS URL
+- Three-column layout (Flipkart, Amazon, Myntra simulation)
+- Preview uploaded image if it's new
+- Displays status: New file / Duplicate / Near-Duplicate
+
+---
+
+## 🌐 IPFS Upload via Pinata
+
+```python
+import requests
+headers = {"Authorization": f"Bearer {PINATA_JWT}"}
+files = {"file": open(file_path, "rb")}
+requests.post(PINATA_URL, headers=headers, files=files)
+```
+
+- CID is extracted and stored
+- Preview link is shown via IPFS Gateway
+
+---
+
+## ✅ Flow Summary
+
+1. User uploads file via Streamlit
+2. Backend computes SHA-256 + pHash
+3. Check SQLite DB for SHA and pHash matches
+4. If not found → Upload to IPFS via Pinata
+5. Store metadata (hashes + CID + time) in `dedup_db.sqlite`
+6. Write SHA & CID to Ethereum smart contract
+7. Display image + status on UI
+
+---
+
+## 📄 Use Case: E-Commerce Platforms
+
+- Flipkart, Amazon, and Myntra simulation
+- Detect if similar images of the same product are being reused
+- Prevent redundant uploads and save cloud storage
+
+---
+
+## 📌 Notes for CVIP Submission
+
+- Problem tackled: **Cloud image duplication** across distributed platforms
+- Novelty: Combines **decentralized IPFS**, **blockchain-backed metadata**, and **image similarity (pHash)**
+- Achieves **fast lookup** using SQLite and visual comparison using pHash
+
+---
+
+## 🚀 Future Enhancements
+
+- Integrate MongoDB or PostgreSQL for larger scale
+- Add image classification (product category prediction)
+- Enable user authentication with MetaMask
+
+
+
