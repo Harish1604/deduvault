@@ -15,7 +15,7 @@ DeduVault is a decentralized system designed to detect and eliminate duplicate o
 | Blockchain    | Solidity, Ethereum (Sepolia testnet) |
 | Storage       | IPFS (via Pinata)                    |
 | Deduplication | SHA-256, pHash (Perceptual Hashing)  |
-
+ 
 ---
 
 ## ⚙️ System Architecture
