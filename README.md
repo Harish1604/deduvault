@@ -8,7 +8,7 @@ DeduVault is a decentralized system designed to detect and eliminate duplicate o
 
 ## 🧠 Technologies Used
 
-| Layer         | Tech Stack                           |
+| Layer         | Tech Stack                           | 
 | ------------- | ------------------------------------ |
 | Frontend      | Streamlit (Python)                   |  
 | Backend       | Python, Web3.py, SQLite3             | 
