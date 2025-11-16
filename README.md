@@ -11,7 +11,7 @@ DeduVault is a decentralized system designed to detect and eliminate duplicate o
 | Layer         | Tech Stack                           |
 | ------------- | ------------------------------------ |
 | Frontend      | Streamlit (Python)                   |  
-| Backend       | Python, Web3.py, SQLite3             |
+| Backend       | Python, Web3.py, SQLite3             | 
 | Blockchain    | Solidity, Ethereum (Sepolia testnet) |
 | Storage       | IPFS (via Pinata)                    |
 | Deduplication | SHA-256, pHash (Perceptual Hashing)  |
